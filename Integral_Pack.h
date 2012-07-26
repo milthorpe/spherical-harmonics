@@ -40,6 +40,7 @@ namespace au {
                             #define MAX_KET_L 200
                             #define MAX_KET_LM (MAX_KET_L+1)*(MAX_KET_L+1)
                             #define lm2k(l,m) ((l)*(l)+(l)+(m))
+                            #define Koffset(k,a) ((k)*(K)+(a))
                             double cxminus[MAX_KET_LM],cxplus[MAX_KET_LM],cyminus[MAX_KET_LM],cyplus[MAX_KET_LM],cz[MAX_KET_LM];
 
                             double *lambda, *q;

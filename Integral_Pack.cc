@@ -75,11 +75,10 @@ namespace au {
         }
 
         // HRR
-        int i,j,a,b;
-        for (i=1; i<=MAX_BRA_L; i++) for (j=1; j<=i; j++) {
+        for (int i=1; i<=MAX_BRA_L; i++) for (int j=1; j<=i; j++) {
             HRRMAP[i][j] = (Point *) malloc(sizeof(Point)*noOfBra[i]*noOfBra[j]);
             if (HRRMAP[i][j]==NULL) {printf("Integral_Pack.cc malloc failed at ln75\n"); exit(1);}
-            for (a=0; a<noOfBra[i]; a++) for (b=0; b<noOfBra[j]; b++) {
+            for (int a=0; a<noOfBra[i]; a++) for (int b=0; b<noOfBra[j]; b++) {
              	int aInt=totalBraL[i]+a,bInt=totalBraL[j]+b;
              	int ax=inverseMap3[aInt].x, ay=inverseMap3[aInt].y, az=inverseMap3[aInt].z,
              		bx=inverseMap3[bInt].x,	by=inverseMap3[bInt].y,	bz=inverseMap3[bInt].z;
@@ -181,8 +180,7 @@ namespace au {
     }
 
     void Integral_Pack::GenclassY(double *A, double *B, double *zetaA, double *zetaB, int dconA, int dconB, int Ln, double *Ylm){
-        int ii,jj;
-        for (ii=0; ii<dconA; ii++) for (jj=0; jj<dconB; jj++) {
+        for (int ii=0; ii<dconA; ii++) for (int jj=0; jj<dconB; jj++) {
             double zeta=zetaA[ii]+zetaB[jj];
             double P[3]={(zetaA[ii]*A[0]+zetaB[jj]*B[0])/zeta,(zetaA[ii]*A[1]+zetaB[jj]*B[1])/zeta,(zetaA[ii]*A[2]+zetaB[jj]*B[2])/zeta};
             double r=sqrt(sqr(P[0])+sqr(P[1])+sqr(P[2]));
@@ -193,15 +191,15 @@ namespace au {
     } 
 
     void Integral_Pack::Genclass(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int n, int Ln, double *Ylm, int maxL){
-        int bra,K=(Ln+1)*(Ln+1),p,e,i,ii,j,jj,k,l,m,ll,ll1; 
-        double ldn=lambda[n],onelambda;
-        bool swap,lzero=(ldn==0.); // should be replace by ldn<1e-y 
-        onelambda = lzero? 0.0 : -1.0/ldn;
-        double (*V1)[K]=(double (*)[K])arrV;///malloc(totalBraL[a+b+1]*K*sizeof(double));
-        double (*V2)[K]=(double (*)[K])(arrV+totalBraL[a+b+1]*K);//malloc(totalBraL[a+b+1]*K*sizeof(double));
+        int K=(Ln+1)*(Ln+1); 
+        double ldn=lambda[n];
+        bool lzero=(ldn==0.); // should be replace by ldn<1e-y 
+        double onelambda = lzero? 0.0 : -1.0/ldn;
+        double* V1 = arrV;///malloc(totalBraL[a+b+1]*K*sizeof(double));
+        double* V2 = arrV+totalBraL[a+b+1]*K;//malloc(totalBraL[a+b+1]*K*sizeof(double));
         //if (V1==NULL || V2==NULL) {printf("Integral_Pack.cc V1/V2 allocation failed size=%d*sizeof(double)\n",totalBraL[a+b+1]*K); exit(1);}
         double (*HRR[a+b+1][b+1])[K];
-        for (i=a; i<=a+b; i++) {
+        for (int i=a; i<=a+b; i++) {
             if (i==a && b==0) HRR[a][0]=(double (*)[K])temp; 
             else HRR[i][0] = (double (*)[K])(malloc(sizeof(double)*K*noOfBra[i]));
             if (HRR[i][0]==NULL) {printf("Integral_Pack.cc HRR[%d][0] allocation failed sized=%d*sizeof(double)\n",i,K*noOfBra[i]); exit(1);}
@@ -210,7 +208,7 @@ namespace au {
         double J[Ln+a+b+1], *Y=NULL, rAB2=sqr(A[0]-B[0])+sqr(A[1]-B[1])+sqr(A[2]-B[2]);
         if (Ylm==NULL) Y=(double *)malloc(sizeof(double)*K); 
         // printf("A %e %e %e B %e %e %e\n",A[0],A[1],A[2],B[0],B[1],B[2]); 
-        for (ii=0; ii<dconA; ii++) for (jj=0; jj<dconB; jj++) {
+        for (int ii=0; ii<dconA; ii++) for (int jj=0; jj<dconB; jj++) {
             double zeta=zetaA[ii]+zetaB[jj];
             double P[3]={(zetaA[ii]*A[0]+zetaB[jj]*B[0])/zeta,(zetaA[ii]*A[1]+zetaB[jj]*B[1])/zeta,(zetaA[ii]*A[2]+zetaB[jj]*B[2])/zeta};
             double gAB=exp(-zetaA[ii]*zetaB[jj]/zeta*rAB2)*pow(PI/zeta,1.5)*conA[ii]*conB[jj];
@@ -234,41 +232,42 @@ namespace au {
                 //if (Ln<10) printf("OK\n");
             } 
 
-            swap = false;
-            for (p=a+b; p>=0; p--) {
+            bool swap = false;
+            for (int p=a+b; p>=0; p--) {
                 swap = !swap;
-                double (* Va)[K] = swap ? V2 : V1;
-                double (* Vb)[K] = swap ? V1 : V2;
+                double* Va = swap ? V2 : V1;
+                double* Vb = swap ? V1 : V2;
                 memset(Va,0,sizeof(double)*K*totalBraL[a+b+1]);
 
                 // ldn=0.0 is taken care of by separately. (3-term RR & trivial initial conditions) only p=0 contributes! RO#7 eqn11
                 if (lzero && p==0) {
-                    Va[0][0]=JpY00[0]*q[0]*gAB;
-                    for (e=1; e<a+b+1; e++) for (i=0; i<noOfBra[e]; i++) {
+                    Va[0]=JpY00[0]*q[0]*gAB;
+                    for (int e=1; e<a+b+1; e++) for (int i=0; i<noOfBra[e]; i++) {
                         int aplusIndex = totalBraL[e]+i;
                         int j=buildMap[aplusIndex]; // printf("j=%d\n",j);
                         int x=inverseMap3[aplusIndex].x,y=inverseMap3[aplusIndex].y,z=inverseMap3[aplusIndex].z;
                         int aIndex = map3[x-delta[0][j]][y-delta[1][j]][z-delta[2][j]];
                         int aminusIndex = map3[abs(x-2*delta[0][j])][abs(y-2*delta[1][j])][abs(z-2*delta[2][j])]; // Be careful
                         int aj = delta[0][j]*(x-1) + delta[1][j]*(y-1) + delta[2][j]*(z-1);
-                        Va[aplusIndex][0]=(P[j]-A[j])*Va[aIndex][0];
-                        if (aj>0) Va[aplusIndex][0] += aj*one2zeta*Va[aminusIndex][0];
+                        Va[Koffset(aplusIndex,0)]=(P[j]-A[j])*Va[Koffset(aIndex,0)];
+                        if (aj>0) Va[Koffset(aplusIndex,0)] += aj*one2zeta*Va[Koffset(aminusIndex,0)];
                     }
                 }
 
                 // Fill e=0
                 if (!rzero && !lzero) {
                     double nfactor=q[n]*gAB*exp(-.25*sqr(ldn)/zeta)*pow(-.5*ldn/zeta/r,p);
-                    for (l=0; l<=Ln; l++) {
-                        ll=l*l+l; for (m=-l; m<=l; m++) Va[0][ll+m] = nfactor*J[l+p]*Y[ll+m]; // eqn (23) //6a
+                    for (int l=0; l<=Ln; l++) {
+                        int ll=l*l+l; 
+                        for (int m=-l; m<=l; m++) Va[Koffset(0,ll+m)] = nfactor*J[l+p]*Y[ll+m]; // eqn (23) //6a
                     }
                 }
                 else if (rzero && !lzero) 
-                    Va[0][0] = q[n]*gAB*exp(-.25*sqr(ldn)/zeta)*pow(-.5*sqr(ldn)/zeta,p)*JpY00[p]; // l=m=0 only //6b   
+                    Va[0] = q[n]*gAB*exp(-.25*sqr(ldn)/zeta)*pow(-.5*sqr(ldn)/zeta,p)*JpY00[p]; // l=m=0 only //6b   
 
                 // Fill higher e
                 if (!lzero) {
-                    for (e=1; e<a+b+1-p; e++) for (i=0; i<noOfBra[e]; i++)  {
+                    for (int e=1; e<a+b+1-p; e++) for (int i=0; i<noOfBra[e]; i++)  {
                         int aplusIndex = totalBraL[e]+i;
                         int j=buildMap[aplusIndex]; // printf("j=%d\n",j);
                         int x=inverseMap3[aplusIndex].x,y=inverseMap3[aplusIndex].y,z=inverseMap3[aplusIndex].z;
@@ -284,47 +283,47 @@ namespace au {
                             cblas_daxpy(K, aj*one2zeta, Vb[aminusIndex], 1, Va[aplusIndex], 1);
                         }*/
 
-                        if (aj) for (k=0; k<K; k++)
-                            Va[aplusIndex][k]=P[j]*Vb[aIndex][k]+paj*Va[aIndex][k]+aj*one2zeta*(Va[aminusIndex][k]+Vb[aminusIndex][k]);
-                        else for (k=0; k<K; k++)
-                            Va[aplusIndex][k] = P[j]*Vb[aIndex][k]+paj*Va[aIndex][k];
+                        if (aj) for (int k=0; k<K; k++)
+                            Va[Koffset(aplusIndex,k)]=P[j]*Vb[Koffset(aIndex,k)]+paj*Va[Koffset(aIndex,k)]+aj*one2zeta*(Va[Koffset(aminusIndex,k)]+Vb[Koffset(aminusIndex,k)]);
+                        else for (int k=0; k<K; k++)
+                            Va[Koffset(aplusIndex,k)] = P[j]*Vb[Koffset(aIndex,k)]+paj*Va[Koffset(aIndex,k)];
 
                         switch (j) {
                         case 2: //z
-                            for (l=1; l<=Ln; l++) {
-                                ll=l*l+l; ll1=l*l-l;
-                                for (m=-l+1; m<l; m++) Va[aplusIndex][ll+m] += onelambda*cz[ll+m]*Vb[aIndex][ll1+m];
+                            for (int l=1; l<=Ln; l++) {
+                                int ll=l*l+l; int ll1=l*l-l;
+                                for (int m=-l+1; m<l; m++) Va[Koffset(aplusIndex,ll+m)] += onelambda*cz[ll+m]*Vb[Koffset(aIndex,ll1+m)];
                             }
                         break;
                         case 1: //y
                             if (Ln>=1) {
-                                Va[aplusIndex][1] += onelambda*cyplus[1]*Vb[aIndex][0];
-                                Va[aplusIndex][3] += onelambda*cyminus[3]*Vb[aIndex][0];
+                                Va[Koffset(aplusIndex,1)] += onelambda*cyplus[1]*Vb[Koffset(aIndex,0)];
+                                Va[Koffset(aplusIndex,3)] += onelambda*cyminus[3]*Vb[Koffset(aIndex,0)];
                             }
-                            for (l=2; l<=Ln; l++) {
-                                ll=l*l+l; ll1=l*l-l;
-                                Va[aplusIndex][ll-l] += onelambda*cyplus[ll-l]*Vb[aIndex][ll1+l-1];
-                                Va[aplusIndex][ll+l] += onelambda*cyminus[ll+l]*Vb[aIndex][ll1-l+1];
-                                Va[aplusIndex][ll-l+1] += onelambda*cyplus[ll-l+1]*Vb[aIndex][ll1+l-2];
-                                Va[aplusIndex][ll+l-1] += onelambda*cyminus[ll+l-1]*Vb[aIndex][ll1-l+2];
-                                for (m=-l+2; m<l-1; m++) 
-                                    Va[aplusIndex][ll+m] += onelambda*(cyplus[ll+m]*Vb[aIndex][ll1-m-1]+cyminus[ll+m]*Vb[aIndex][ll1-m+1]);
+                            for (int l=2; l<=Ln; l++) {
+                                int ll=l*l+l; int ll1=l*l-l;
+                                Va[Koffset(aplusIndex,ll-l)] += onelambda*cyplus[ll-l]*Vb[Koffset(aIndex,ll1+l-1)];
+                                Va[Koffset(aplusIndex,ll+l)] += onelambda*cyminus[ll+l]*Vb[Koffset(aIndex,ll1-l+1)];
+                                Va[Koffset(aplusIndex,ll-l+1)] += onelambda*cyplus[ll-l+1]*Vb[Koffset(aIndex,ll1+l-2)];
+                                Va[Koffset(aplusIndex,ll+l-1)] += onelambda*cyminus[ll+l-1]*Vb[Koffset(aIndex,ll1-l+2)];
+                                for (int m=-l+2; m<l-1; m++) 
+                                    Va[Koffset(aplusIndex,ll+m)] += onelambda*(cyplus[ll+m]*Vb[Koffset(aIndex,ll1-m-1)]+cyminus[ll+m]*Vb[Koffset(aIndex,ll1-m+1)]);
                             }
                         break;
                         //case 0:
                         default: //x
                             if (Ln>=1) {
-                                Va[aplusIndex][1] += onelambda*cxplus[1]*Vb[aIndex][0];
-                                Va[aplusIndex][3] += onelambda*cxminus[3]*Vb[aIndex][0];
+                                Va[Koffset(aplusIndex,1)] += onelambda*cxplus[1]*Vb[Koffset(aIndex,0)];
+                                Va[Koffset(aplusIndex,3)] += onelambda*cxminus[3]*Vb[Koffset(aIndex,0)];
                             }
-                            for (l=2; l<=Ln; l++) {
-                                ll=l*l+l; ll1=l*l-l;
-                                Va[aplusIndex][ll-l] += onelambda*cxplus[ll-l]*Vb[aIndex][ll1-l+1];
-                                Va[aplusIndex][ll+l] += onelambda*cxminus[ll+l]*Vb[aIndex][ll1+l-1];
-                                Va[aplusIndex][ll-l+1] += onelambda*cxplus[ll-l+1]*Vb[aIndex][ll1-l+2];
-                                Va[aplusIndex][ll+l-1] += onelambda*cxminus[ll+l-1]*Vb[aIndex][ll1+l-2];                                
-                                for (m=-l+2; m<l-1; m++) 
-                                    Va[aplusIndex][ll+m] += onelambda*(cxplus[ll+m]*Vb[aIndex][ll1+m+1]+cxminus[ll+m]*Vb[aIndex][ll1+m-1]);
+                            for (int l=2; l<=Ln; l++) {
+                                int ll=l*l+l; int ll1=l*l-l;
+                                Va[Koffset(aplusIndex,ll-l)] += onelambda*cxplus[ll-l]*Vb[Koffset(aIndex,ll1-l+1)];
+                                Va[Koffset(aplusIndex,ll+l)] += onelambda*cxminus[ll+l]*Vb[Koffset(aIndex,ll1+l-1)];
+                                Va[Koffset(aplusIndex,ll-l+1)] += onelambda*cxplus[ll-l+1]*Vb[Koffset(aIndex,ll1-l+2)];
+                                Va[Koffset(aplusIndex,ll+l-1)] += onelambda*cxminus[ll+l-1]*Vb[Koffset(aIndex,ll1+l-2)];                                
+                                for (int m=-l+2; m<l-1; m++) 
+                                    Va[Koffset(aplusIndex,ll+m)] += onelambda*(cxplus[ll+m]*Vb[Koffset(aIndex,ll1+m+1)]+cxminus[ll+m]*Vb[Koffset(aIndex,ll1+m-1)]);
 
                             }
                         }
@@ -332,11 +331,10 @@ namespace au {
                 }
 
             }
-            double (* Va)[K] = swap ? V2 : V1;
-            for (i=a; i<=a+b; i++) for (bra=0; bra<noOfBra[i]; bra++) for (k=0; k<K; k++)
-                HRR[i][0][bra][k] = Va[bra+totalBraL[i]][k]+HRR[i][0][bra][k]; 
+            double* Vx = swap ? V2 : V1;
+            for (int i=a; i<=a+b; i++) for (int bra=0; bra<noOfBra[i]; bra++) for (int k=0; k<K; k++)
+                HRR[i][0][bra][k] = Vx[Koffset(bra+totalBraL[i],k)] + HRR[i][0][bra][k]; 
                 // cblas_daxpy(K, 1.0, Va[bra+totalBraL[i]], 1, HRR[i][0][bra], 1); 
-                // HRR[i][0][bra][...] = Va[bra+totalBraL[i]][...]+HRR[i][0][bra][...] 
         }
 
         //free(V1);free(V2);
@@ -344,16 +342,16 @@ namespace au {
 
         double dd[3]={A[0]-B[0],A[1]-B[1],A[2]-B[2]};
    
-        for (j=1; j<=b; j++) for (i=a; i<=a+b-j; i++)  {
+        for (int j=1; j<=b; j++) for (int i=a; i<=a+b-j; i++)  {
             if (i==a && j==b) HRR[a][b]=(double (*)[K])temp;
             else HRR[i][j]=(double (*)[K])(malloc(sizeof(double)*K*noOfBra[i]*noOfBra[j]));
             if (HRR[i][j]==NULL) {printf("Integral_Pack.cc HRR[%d][%d] size=%d*sizeof(double)\n",i,j,K*noOfBra[i]*noOfBra[j]); exit(1);}
-            for (ii=0; ii<noOfBra[i]; ii++) for (jj=0; jj<noOfBra[j]; jj++) {
+            for (int ii=0; ii<noOfBra[i]; ii++) for (int jj=0; jj<noOfBra[j]; jj++) {
             	int lindex = ii*noOfBra[j] + jj;
             	int rindex1=HRRMAP[i][j][lindex].x;
             	int rindex2=HRRMAP[i][j][lindex].y;
             	double factor = dd[HRRMAP[i][j][lindex].z];
-                for (k=0; k<K; k++) HRR[i][j][lindex][k]=factor*HRR[i][j-1][rindex2][k]+HRR[i+1][j-1][rindex1][k];
+                for (int k=0; k<K; k++) HRR[i][j][lindex][k]=factor*HRR[i][j-1][rindex2][k]+HRR[i+1][j-1][rindex1][k];
                 /*double* lhs = HRR[i][j][lindex];
                 double* rhs1 = HRR[i+1][j-1][rindex1];
                 double* rhs2 = HRR[i][j-1][rindex2];
