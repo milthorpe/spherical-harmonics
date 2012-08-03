@@ -235,8 +235,8 @@ namespace au {
             bool swap = false;
             for (int p=a+b; p>=0; p--) {
                 swap = !swap;
-                double* Va = swap ? V2 : V1;
-                double* Vb = swap ? V1 : V2;
+                double *Va = swap?V2:V1,
+                       *Vb = swap?V1:V2;
                 memset(Va,0,sizeof(double)*K*totalBraL[a+b+1]);
 
                 // ldn=0.0 is taken care of by separately. (3-term RR & trivial initial conditions) only p=0 contributes! RO#7 eqn11
