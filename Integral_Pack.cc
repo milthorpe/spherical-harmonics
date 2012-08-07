@@ -383,8 +383,8 @@ namespace au {
         int i;
         FILE *fptr1,*fptr2;
         char fname1[255],fname2[255];
-        sprintf(fname1,"/roots%d.txt",N);
-        sprintf(fname2,"/weights%d.txt",N);
+        sprintf(fname1,"Ewald/roots%d.txt",N);
+        sprintf(fname2,"Ewald/weights%d.txt",N);
         fptr1=(FILE *)fopen(fname1,"r");
         fptr2=(FILE *)fopen(fname2,"r");
         if (!fptr1 || !fptr2) {printf("Integral_Pack.cc can't find Hermite root/weight for Ewald calculation.\n"); exit(1);}
