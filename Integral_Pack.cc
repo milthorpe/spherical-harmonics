@@ -25,20 +25,17 @@ namespace au {
             namespace qm {
                 namespace ro {
 
-    Integral_Pack* Integral_Pack::_make(int N, int L,int Type) {
+    Integral_Pack* Integral_Pack::_make(int N, int L,double Type) {
       return new Integral_Pack(N,L,Type);
     }
 
-    Integral_Pack::Integral_Pack(int N, int L, int Type) {
+    Integral_Pack::Integral_Pack(int N, int L, double Type) {
         this->N = N; this->L=L; this->Type=Type;
         initialize();
-        switch (Type) {
-            case 0: initializeCoulomb(N); break;
-            case 1: initializeEwald(N); break;
-            default: printf("Integral_Pacl.cc Invalid type for initialization\n");
-        }
+        if (Type<=0.) initializeCoulomb(N);
+        else initializeEwald(N,Type);         
         arrV=(double *)malloc(totalBraL[MAX_BRA_L+1]*(L+1)*(L+1)*sizeof(double)*2);
-        printf("Integral_Pack.cc N=%d L=%d type=%d\n",N,L,Type);
+        printf("Integral_Pack.cc N=%d L=%d type=%f\n",N,L,Type);
     }
 
     Integral_Pack::~Integral_Pack() {
@@ -380,7 +377,7 @@ namespace au {
         q[0]=2.;
     }
 
-    void Integral_Pack::initializeEwald(int N){
+    void Integral_Pack::initializeEwald(int N, double Omega){
         lambda = (double *) malloc(sizeof(double)*(N+1));
         q = (double *) malloc(sizeof(double)*(N+1));
         int i;
@@ -390,10 +387,10 @@ namespace au {
         sprintf(fname2,"/weights%d.txt",N);
         fptr1=(FILE *)fopen(fname1,"r");
         fptr2=(FILE *)fopen(fname2,"r");
-        if (!fptr1 || !fptr2) {printf("Integral_Pack.cc Ewald root/weight read error\n"); exit(1);}
+        if (!fptr1 || !fptr2) {printf("Integral_Pack.cc can't find Hermite root/weight for Ewald calculation.\n"); exit(1);}
         for (i=0; i<=N; i++) {
-            fscanf(fptr1,"%lf",&lambda[i]);
-            fscanf(fptr2,"%lf",&q[i]);
+            fscanf(fptr1,"%lf",&lambda[i]); lambda[i]*=2.*Omega;
+            fscanf(fptr2,"%lf",&q[i]); q[i]=4.*sqrt(q[i]*Omega);
         }        
     }
 
