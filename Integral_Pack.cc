@@ -25,17 +25,20 @@ namespace au {
             namespace qm {
                 namespace ro {
 
-    Integral_Pack* Integral_Pack::_make(int N, int L) {
-      return new Integral_Pack(N,L);
+    Integral_Pack* Integral_Pack::_make(int N, int L,int Type) {
+      return new Integral_Pack(N,L,Type);
     }
 
-    Integral_Pack::Integral_Pack(int N,int L) {
-        this->N = N; this->L=L;
+    Integral_Pack::Integral_Pack(int N, int L, int Type) {
+        this->N = N; this->L=L; this->Type=Type;
         initialize();
-        initializeCoulomb(N);
-
+        switch (Type) {
+            case 0: initializeCoulomb(N); break;
+            case 1: initializeEwald(N); break;
+            default: printf("Integral_Pacl.cc Invalid type for initialization\n");
+        }
         arrV=(double *)malloc(totalBraL[MAX_BRA_L+1]*(L+1)*(L+1)*sizeof(double)*2);
-        printf("Integral_Pack.cc N=%d L=%d\n",N,L);
+        printf("Integral_Pack.cc N=%d L=%d type=%d\n",N,L,Type);
     }
 
     Integral_Pack::~Integral_Pack() {
@@ -376,6 +379,24 @@ namespace au {
         }
         q[0]=2.;
     }
+
+    void Integral_Pack::initializeEwald(int N){
+        lambda = (double *) malloc(sizeof(double)*(N+1));
+        q = (double *) malloc(sizeof(double)*(N+1));
+        int i;
+        FILE *fptr1,*fptr2;
+        char fname1[255],fname2[255];
+        sprintf(fname1,"/roots%d.txt",N);
+        sprintf(fname2,"/weights%d.txt",N);
+        fptr1=(FILE *)fopen(fname1,"r");
+        fptr2=(FILE *)fopen(fname2,"r");
+        if (!fptr1 || !fptr2) {printf("Integral_Pack.cc Ewald root/weight read error\n"); exit(1);}
+        for (i=0; i<=N; i++) {
+            fscanf(fptr1,"%lf",&lambda[i]);
+            fscanf(fptr2,"%lf",&q[i]);
+        }        
+    }
+
 
 // end Integral_Pack
 
