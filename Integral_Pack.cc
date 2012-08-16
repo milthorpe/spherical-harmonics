@@ -381,6 +381,8 @@ namespace au {
         lambda = (double *) malloc(sizeof(double)*(N+1));
         q = (double *) malloc(sizeof(double)*(N+1));
         int i;
+        // TODO: Replaced by on-the-fly generation of roots and weights
+        // TODO: Take into account eqn11 and eqn12 in RO#5
         FILE *fptr1,*fptr2;
         char fname1[255],fname2[255];
         sprintf(fname1,"Ewald/roots%d.txt",N);
