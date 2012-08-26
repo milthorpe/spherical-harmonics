@@ -18,14 +18,16 @@ namespace au {
                 namespace ro {
                     class Integral_Pack {
                         public:
-                            static Integral_Pack* _make(int N, int L, double Type);
-                            Integral_Pack(int N, int L,double Type);
+                            static Integral_Pack* _make(int N, int L, double Type,double roThresh, double rad);
+                            Integral_Pack(int N, int L,double Type,double roThresh, double rad);
                             ~Integral_Pack();
                             void GenclassY(double *A, double *B, double *zetaA, double *zetaB, int dconA, int dconB, int Ln, double *Ylm);
                             void Genclass(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int N, int Ln, double *Ylm, int maxL);
+                            int getNL(int *n_l);
 
                         private:
                             int N,L; double Type;
+                            int Ncal,Nprime; double thresh,rad;
                             // BRA
                             #define MAX_BRA_L 10 //for hh
                             #define MAX_TOTAL_BRA_L (MAX_BRA_L+1)*(MAX_BRA_L+2)*(MAX_BRA_L+3)/6
@@ -47,7 +49,7 @@ namespace au {
 
                             void initialize();
                             void initializeCoulomb(int N);
-                            void initializeEwald(int N, double Omega);
+                            void initializeEwald(int N, int L, double Omega, double thresh, double rad);
                             void GenJ(double *B, double x, int L);
                             void GenY(double *Y, double X, double phi, int L);
 

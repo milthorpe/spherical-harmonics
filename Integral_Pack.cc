@@ -25,15 +25,16 @@ namespace au {
             namespace qm {
                 namespace ro {
 
-    Integral_Pack* Integral_Pack::_make(int N, int L,double Type) {
-      return new Integral_Pack(N,L,Type);
+    Integral_Pack* Integral_Pack::_make(int N, int L,double Type, double roThresh, double mrad) {
+      return new Integral_Pack(N,L,Type,roThresh,mrad);
     }
 
-    Integral_Pack::Integral_Pack(int N, int L, double Type) {
+    Integral_Pack::Integral_Pack(int N, int L, double Type, double roThresh, double mrad) {
         this->N = N; this->L=L; this->Type=Type;
         initialize();
+        thresh=roThresh; rad=mrad;
         if (Type<=0.) initializeCoulomb(N);
-        else initializeEwald(N,Type);         
+        else initializeEwald(N, L, Type, roThresh, mrad);         
         arrV=(double *)malloc(totalBraL[MAX_BRA_L+1]*(L+1)*(L+1)*sizeof(double)*2);
         printf("Integral_Pack.cc N=%d L=%d type=%f\n",N,L,Type);
     }
@@ -377,12 +378,19 @@ namespace au {
         q[0]=2.;
     }
 
-    void Integral_Pack::initializeEwald(int N, double Omega){
+    void Integral_Pack::initializeEwald(int N, int L, double Omega, double thresh, double rad){
+        // TODO: Take into account eqn11 and eqn12 in RO#5
+        //int Ncal,Nprime;
+        Ncal=(int) ceil(rad*rad/4.+(sqrt(-log10(thresh))-1)*rad+2.); //RO Thesis Eq (5.11) and RO#5 Eq (11)
+        Nprime = Ncal;//(int) ceil(2./PI*sqrt(-(Ncal+1)*log(thresh))-1.); // RO Thesis Eq (5.12) and RO#5 Eq (12)
+        printf("Omega=%5.3f thresh=%e rad=%7.3f\n",Omega,thresh,rad);
+        printf("Ncal=%d Nprime=%d\n", Ncal,Nprime);
+
         lambda = (double *) malloc(sizeof(double)*(N+1));
         q = (double *) malloc(sizeof(double)*(N+1));
         int i;
-        // TODO: Replaced by on-the-fly generation of roots and weights
-        // TODO: Take into account eqn11 and eqn12 in RO#5
+
+        // TODO: Replaced external file read-in by on-the-fly generation of roots and weights        
         FILE *fptr1,*fptr2;
         char fname1[255],fname2[255];
         sprintf(fname1,"Ewald/roots%d.txt",N);
@@ -393,9 +401,31 @@ namespace au {
         for (i=0; i<=N; i++) {
             fscanf(fptr1,"%lf",&lambda[i]); lambda[i]*=2.*Omega;
             fscanf(fptr2,"%lf",&q[i]); q[i]=4.*sqrt(q[i]*Omega);
-        }        
+        }
+
     }
 
+    int Integral_Pack::getNL(int *n_l) {
+        printf("*** Integral_Pack::getNL ****\n");
+        int n,l,maxn,maxl=-1;
+        for (n=0; n<=Nprime; n++) {
+            double newthresh=thresh/(q[n]*q[n]);
+            double kd = lambda[n]*rad; // 2 omega beta[n] r1
+            int Lcal = (int) ceil(kd+1.3393*pow(-log10(newthresh),2./3.)*pow(kd,1./3.)); // IEEE Eqn (10) modified
+
+            double J[L+1];
+            GenJ(J,kd,L);            
+            for (l=L; l>=0 && fabs((2.*l+1.)/4./PI*J[l]*J[l]*q[n]*q[n])<thresh;) l--;            
+            
+            printf("n=%d Lcal=%d Ltest=%d\n",n,Lcal,l);
+            n_l[n+1]=l;
+            if (l!=-1) maxn=n;
+            if (l>maxl) maxl=l;
+        }
+        n_l[0]=Nprime;//maxn;
+        n_l[Nprime+2]=maxl;
+        printf("*** Overide N and L ***\n");
+    }
 
 // end Integral_Pack
 
