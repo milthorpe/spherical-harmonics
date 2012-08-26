@@ -400,7 +400,7 @@ namespace au {
         fptr1=(FILE *)fopen(fname1,"r");
         fptr2=(FILE *)fopen(fname2,"r");
         if (!fptr1 || !fptr2) {printf("Integral_Pack.cc can't find Hermite root/weight for Ewald calculation.\n"); exit(1);}
-        for (i=0; i<=N; i++) {
+        for (i=0; i<=Ncal; i++) {
             fscanf(fptr1,"%lf",&lambda[i]); lambda[i]*=2.*Omega;
             fscanf(fptr2,"%lf",&q[i]); q[i]=4.*sqrt(q[i]*Omega);
         }
