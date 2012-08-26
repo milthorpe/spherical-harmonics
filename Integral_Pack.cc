@@ -381,8 +381,10 @@ namespace au {
     void Integral_Pack::initializeEwald(int N, int L, double Omega, double thresh, double rad){
         // TODO: Take into account eqn11 and eqn12 in RO#5
         //int Ncal,Nprime;
-        Ncal=(int) ceil(rad*rad/4.+(sqrt(-log10(thresh))-1)*rad+2.); //RO Thesis Eq (5.11) and RO#5 Eq (11)
-        Nprime = Ncal;//(int) ceil(2./PI*sqrt(-(Ncal+1)*log(thresh))-1.); // RO Thesis Eq (5.12) and RO#5 Eq (12)
+        double R=rad*Omega*2.;
+        Ncal=(int) ceil(R*R/4.+(sqrt(-log10(thresh))-1)*R+2.); //RO Thesis Eq (5.11) and RO#5 Eq (11)
+        Nprime = (int) ceil(2./PI*sqrt(-(Ncal+1)*log10(thresh))-1.); // RO Thesis Eq (5.12) and RO#5 Eq (12)
+        if (Nprime>Ncal) Nprime=Ncal;
         printf("Omega=%5.3f thresh=%e rad=%7.3f\n",Omega,thresh,rad);
         printf("Ncal=%d Nprime=%d\n", Ncal,Nprime);
 
@@ -393,8 +395,8 @@ namespace au {
         // TODO: Replaced external file read-in by on-the-fly generation of roots and weights        
         FILE *fptr1,*fptr2;
         char fname1[255],fname2[255];
-        sprintf(fname1,"Ewald/roots%d.txt",N);
-        sprintf(fname2,"Ewald/weights%d.txt",N);
+        sprintf(fname1,"Ewald/roots%d.txt",Ncal);
+        sprintf(fname2,"Ewald/weights%d.txt",Ncal);
         fptr1=(FILE *)fopen(fname1,"r");
         fptr2=(FILE *)fopen(fname2,"r");
         if (!fptr1 || !fptr2) {printf("Integral_Pack.cc can't find Hermite root/weight for Ewald calculation.\n"); exit(1);}
