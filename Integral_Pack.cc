@@ -381,9 +381,9 @@ namespace au {
     void Integral_Pack::initializeEwald(int N, int L, double Omega, double thresh, double rad){
         // TODO: Take into account eqn11 and eqn12 in RO#5
         //int Ncal,Nprime;
-        double R=rad*Omega*2.;
-        Ncal=(int) ceil(R*R/4.+(sqrt(-log10(thresh))-1)*R+2.); //RO Thesis Eq (5.11) and RO#5 Eq (11)
-        Nprime = (int) ceil(2./PI*sqrt(-(Ncal+1)*log(thresh))-1.); // RO Thesis Eq (5.12) and RO#5 Eq (12)
+        double R=rad*Omega*2.,th=thresh*PI/4/Omega;
+        Ncal=(int) ceil(R*R/4.+(sqrt(-log10(th))-1)*R+2.); //RO Thesis Eq (5.11) and RO#5 Eq (11)
+        Nprime = (int) ceil(2./PI*sqrt(-(Ncal+1)*log(th))-1.); // RO Thesis Eq (5.12) and RO#5 Eq (12)
         if (Nprime>Ncal) Nprime=Ncal;
         printf("Omega=%5.3f thresh=%e rad=%7.3f\n",Omega,thresh,rad);
         printf("Ncal=%d Nprime=%d\n", Ncal,Nprime);
@@ -419,7 +419,7 @@ namespace au {
 
             double J[L+1];
             GenJ(J,kd,L);            
-            for (l=L; l>=0 && fabs((2.*l+1.)/4.*omega/PI*J[l]*J[l]*q[n]*q[n])<thresh;) l--;            
+            for (l=L; l>=0 && fabs(sqr(q[n]*J[l])/4./PI)<thresh;) l--;            
             
             printf("n=%d Lcal=%d Ltest=%d\n",n,Lcal,l);
             n_l[n+1]=l;
