@@ -413,13 +413,13 @@ namespace au {
         printf("*** Integral_Pack::getNL ****\n");
         int n,l,maxn,maxl=-1;
         for (n=0; n<=Nprime; n++) {
-            double newthresh=thresh/(q[n]*q[n]);
+            double newthresh=thresh/(q[n]*q[n])/Nprime;
             double kd = lambda[n]*rad; // 2 omega beta[n] r1
             int Lcal = (int) ceil(kd+1.3393*pow(-log10(newthresh),2./3.)*pow(kd,1./3.)); // IEEE Eqn (10) modified
 
             double J[L+1];
             GenJ(J,kd,L);            
-            for (l=L; l>=0 && fabs(sqr(q[n]*J[l])/4./PI)<thresh;) l--;            
+            for (l=L; l>=0 && fabs(sqr(q[n]*J[l])/4./PI)<thresh/Nprime;) l--;            
             
             printf("n=%d Lcal=%d Ltest=%d\n",n,Lcal,l);
             n_l[n+1]=l;
