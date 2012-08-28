@@ -386,7 +386,7 @@ namespace au {
         Nprime = (int) ceil(2./PI*sqrt(-(Ncal+1)*log(th))-1.); // RO Thesis Eq (5.12) and RO#5 Eq (12)
         if (Nprime>Ncal) Nprime=Ncal;
         printf("Omega=%5.3f thresh=%e rad=%7.3f\n",Omega,thresh,rad);
-        printf("Ncal=%d Nprime=%d\n", Ncal,Nprime);
+        
 
         lambda = (double *) malloc(sizeof(double)*(Nprime+1));
         q = (double *) malloc(sizeof(double)*(Nprime+1));
@@ -413,22 +413,19 @@ namespace au {
         printf("*** Integral_Pack::getNL ****\n");
         int n,l,maxn,maxl=-1;
         for (n=0; n<=Nprime; n++) {
-            double newthresh=thresh/(q[n]*q[n])/Nprime;
-            double kd = lambda[n]*rad; // 2 omega beta[n] r1
-            int Lcal = (int) ceil(kd+1.3393*pow(-log10(newthresh),2./3.)*pow(kd,1./3.)); // IEEE Eqn (10) modified
-
             double J[L+1];
-            GenJ(J,kd,L);            
+            GenJ(J,lambda[n]*rad,L); // 2 omega beta[n] r1           
             for (l=L; l>=0 && fabs(sqr(q[n]*J[l])/4./PI)<thresh/Nprime;) l--;            
             
-            printf("n=%d Lcal=%d Ltest=%d\n",n,Lcal,l);
+            printf("n=%d Ltest=%d\n",n,l);
             n_l[n+1]=l;
             if (l!=-1) maxn=n;
             if (l>maxl) maxl=l;
         }
         n_l[0]=Nprime;//maxn;
         n_l[Nprime+2]=maxl;
-        printf("*** Overide N and L ***\n");
+        printf("*** Override N and L ***\n");
+        printf("Ncal=%d Nprime=%d L=%d\n", Ncal,Nprime,maxl);
     }
 
 // end Integral_Pack
