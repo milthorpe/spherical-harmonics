@@ -185,7 +185,7 @@ namespace au {
             double zeta=zetaA[ii]+zetaB[jj];
             double P[3]={(zetaA[ii]*A[0]+zetaB[jj]*B[0])/zeta,(zetaA[ii]*A[1]+zetaB[jj]*B[1])/zeta,(zetaA[ii]*A[2]+zetaB[jj]*B[2])/zeta};
             double r=sqrt(sqr(P[0])+sqr(P[1])+sqr(P[2]));
-            if (r<=1e-14) continue; // CHECK 
+            if (r<1e-15/roZ) continue; // CHECK 
             double *Y=&Ylm[(ii*dconB+jj)*(Ln+1)*(Ln+1)],phi=atan2(P[1],P[0]),X=P[2]/r;
             GenY(Y,X,phi,Ln); 
         }
@@ -194,7 +194,7 @@ namespace au {
     void Integral_Pack::Genclass(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int n, int Ln, double *Ylm, int maxL){
         int K=(Ln+1)*(Ln+1); 
         double ldn=lambda[n];
-        bool lzero=(ldn==0.); // should be replace by ldn<1e-y 
+        bool lzero=(ldn<1e-15/roZ); //  
         double onelambda = lzero? 0.0 : -1.0/ldn;
         double* V1 = arrV;///malloc(totalBraL[a+b+1]*K*sizeof(double));
         double* V2 = arrV+totalBraL[a+b+1]*K;//malloc(totalBraL[a+b+1]*K*sizeof(double));
@@ -216,7 +216,7 @@ namespace au {
             double one2zeta=.5/zeta;
 
             double r=sqrt(sqr(P[0])+sqr(P[1])+sqr(P[2]));
-            bool rzero=(r<1e-14/roZ); // scaled so that this codition is insensitive to roZ
+            bool rzero=(r<1e-15/roZ); // scaled so that this codition is insensitive to roZ
 
             //printf("ii=%d jj=%d zetaA=%e zetaB=%e zeta=%e conA=%e conB=%e rAB2=%e gAB=%e\n",ii,jj,zetaA[ii],zetaB[jj],zeta,conA[ii],conB[jj],rAB2,gAB);
 
@@ -413,12 +413,12 @@ namespace au {
     int Integral_Pack::getNL(int *n_l) {
         printf("*** Integral_Pack::getNL ****\n");
         int n,l,maxn,maxl=-1;
-        double th=thresh/Nprime; // back to original unscaled thresh
-        printf("th=%e thresh=%e roZ=%e\n",th,thresh,roZ);
+        double th=thresh/Nprime; // this thresh has been scaled
+        //printf("th=%e thresh=%e roZ=%e\n",th,thresh,roZ);
         for (n=0; n<=Nprime; n++) {
-            double J[L+1]; printf("lambda[%d]*rad=%e lambda=%e\n",n,lambda[n]*rad,lambda[n]);
+            double J[L+1]; //printf("lambda[%d]*rad=%e lambda=%e\n",n,lambda[n]*rad,lambda[n]);
             GenJ(J,lambda[n]*rad,L); // 2 omega beta[n] r1           
-            for (l=L; l>=0 && fabs(sqr(q[n]*J[l])/4./PI)<th;) {printf("%e\n",fabs(sqr(q[n]*J[l])/4./PI)); l--;} //q[n] and th has roZ factor     
+            for (l=L; l>=0 && fabs(sqr(q[n]*J[l])/4./PI)<th;) {/*printf("%e\n",fabs(sqr(q[n]*J[l])/4./PI));*/ l--;} //q[n] and th has roZ factor     
             
             printf("n=%d Ltest=%d\n",n,l);
             n_l[n+1]=l;
