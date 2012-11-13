@@ -25,14 +25,14 @@ namespace au {
             namespace qm {
                 namespace ro {
 
-    Integral_Pack* Integral_Pack::_make(int N, int L,double Type, double roThresh, double mrad) {
-      return new Integral_Pack(N,L,Type,roThresh,mrad);
+    Integral_Pack* Integral_Pack::_make(int N, int L,double Type, double roThresh, double mrad,double roZ) {
+      return new Integral_Pack(N,L,Type,roThresh,mrad,roZ);
     }
 
-    Integral_Pack::Integral_Pack(int N, int L, double Type, double roThresh, double mrad) {
+    Integral_Pack::Integral_Pack(int N, int L, double Type, double roThresh, double mrad, double roZ) {
         this->N = N; this->L=L; this->Type=Type;
         initialize();
-        thresh=roThresh; rad=mrad; omega=Type;
+        thresh=roThresh; rad=mrad; omega=Type; this->roZ=roZ;
         if (Type<=0.) initializeCoulomb(N);
         else initializeEwald(N, L, Type, roThresh, mrad);         
         arrV=(double *)malloc(totalBraL[MAX_BRA_L+1]*(L+1)*(L+1)*sizeof(double)*2);
@@ -216,7 +216,7 @@ namespace au {
             double one2zeta=.5/zeta;
 
             double r=sqrt(sqr(P[0])+sqr(P[1])+sqr(P[2]));
-            bool rzero=(r<=1e-14); // CHECK
+            bool rzero=(r<1e-14/roZ); // scaled so that this codition is insensitive to roZ
 
             //printf("ii=%d jj=%d zetaA=%e zetaB=%e zeta=%e conA=%e conB=%e rAB2=%e gAB=%e\n",ii,jj,zetaA[ii],zetaB[jj],zeta,conA[ii],conB[jj],rAB2,gAB);
 
@@ -413,10 +413,12 @@ namespace au {
     int Integral_Pack::getNL(int *n_l) {
         printf("*** Integral_Pack::getNL ****\n");
         int n,l,maxn,maxl=-1;
+        double th=thresh/Nprime; // back to original unscaled thresh
+        printf("th=%e thresh=%e roZ=%e\n",th,thresh,roZ);
         for (n=0; n<=Nprime; n++) {
-            double J[L+1];
+            double J[L+1]; printf("lambda[%d]*rad=%e lambda=%e\n",n,lambda[n]*rad,lambda[n]);
             GenJ(J,lambda[n]*rad,L); // 2 omega beta[n] r1           
-            for (l=L; l>=0 && fabs(sqr(q[n]*J[l])/4./PI)<thresh/Nprime;) l--;            
+            for (l=L; l>=0 && fabs(sqr(q[n]*J[l])/4./PI)<th;) {printf("%e\n",fabs(sqr(q[n]*J[l])/4./PI)); l--;} //q[n] and th has roZ factor     
             
             printf("n=%d Ltest=%d\n",n,l);
             n_l[n+1]=l;
