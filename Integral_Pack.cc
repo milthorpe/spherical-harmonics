@@ -4,7 +4,6 @@
 #include <string.h>
 #include "bessel4.h"
 #include "Integral_Pack.h"
-#include "cblas.h"
 
 #define sqr(x) ((x)*(x))
 #define SQRT2 1.4142135623730951
