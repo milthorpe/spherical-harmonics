@@ -28,6 +28,7 @@ namespace au {
                         private:
                             int N,L; double Type,roZ;
                             int Ncal,Nprime; double thresh,rad,omega;
+                            double *arrV;
                             // BRA
                             #define MAX_BRA_L 10 //for hh
                             #define MAX_TOTAL_BRA_L (MAX_BRA_L+1)*(MAX_BRA_L+2)*(MAX_BRA_L+3)/6
