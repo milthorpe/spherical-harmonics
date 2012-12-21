@@ -5,6 +5,12 @@
 #include "bessel4.h"
 #include "Integral_Pack.h"
 
+#ifdef __X10_HEADERS
+#include <x10aux/config.h>
+#include <x10aux/RTT.h>
+using namespace x10aux;
+#endif
+
 #define sqr(x) ((x)*(x))
 #define SQRT2 1.4142135623730951
 
@@ -22,6 +28,10 @@ namespace au {
         namespace anu {
             namespace qm {
                 namespace ro {
+
+#ifdef __X10_HEADERS
+RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
+#endif
 
     Integral_Pack* Integral_Pack::_make(int N, int L,double Type, double roThresh, double mrad,double roZ) {
       return new Integral_Pack(N,L,Type,roThresh,mrad,roZ);

@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __X10_HEADERS
+#include <x10aux/RTT.h>
+#endif
+
 #define sqr(x) ((x)*(x))
 #define SQRT2 1.4142135623730951
 
@@ -18,6 +22,9 @@ namespace au {
                 namespace ro {
                     class Integral_Pack {
                         public:
+#ifdef __X10_HEADERS
+    RTT_H_DECLS_CLASS;
+#endif
                             static Integral_Pack* _make(int N, int L, double Type,double roThresh, double rad, double roZ);
                             Integral_Pack(int N, int L,double Type,double roThresh, double rad, double roZ);
                             ~Integral_Pack();
