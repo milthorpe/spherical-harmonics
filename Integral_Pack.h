@@ -25,7 +25,7 @@ namespace au {
 #ifdef __X10_HEADERS
     RTT_H_DECLS_CLASS;
 #endif
-                            static Integral_Pack* _make(int N, int L, double Type,double roThresh, double rad, double roZ);
+                            static Integral_Pack* _make(int N, int L, double Type, double roThresh, double rad, double roZ);
                             Integral_Pack(int N, int L,double Type,double roThresh, double rad, double roZ);
                             ~Integral_Pack();
                             void GenclassY(double *A, double *B, double *zetaA, double *zetaB, int dconA, int dconB, int Ln, double *Ylm);
