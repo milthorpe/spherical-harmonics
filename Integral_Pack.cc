@@ -52,7 +52,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
     Integral_Pack::~Integral_Pack() {
         free(lambda); free(q); free(arrV); 
         for (int i=1; i<=MAX_BRA_L; i++) for (int j=1; j<=i; j++) {
-            free(HRRMAP[i][j]);
+            free(HRRMAP[i][j]); free(HRRMAP2[i][j]);
         }
     }
 
@@ -78,7 +78,6 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
                 m++;
             }
         }
-
         // HRR
         for (int i=1; i<=MAX_BRA_L; i++) for (int j=1; j<=i; j++) {
             HRRMAP[i][j] = (Point *) malloc(sizeof(Point)*noOfBra[i]*noOfBra[j]);
@@ -96,6 +95,25 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
                 HRRMAP[i][j][leftindex].x=rightindexA;
                 HRRMAP[i][j][leftindex].y=rightindexB;
                 HRRMAP[i][j][leftindex].z=increment;
+            }
+        }
+        // HRR2
+        for (int i=1; i<=MAX_BRA_L; i++) for (int j=1; j<=i; j++) { /*ok*/
+            HRRMAP2[j][i] = (Point *) malloc(sizeof(Point)*noOfBra[i]*noOfBra[j]); /*a<b*/
+            if (HRRMAP2[j][i]==NULL) {printf("Integral_Pack.cc malloc failed at ln75\n"); exit(1);} /*a<b*/
+            for (int b=0; b<noOfBra[i]; b++) for (int a=0; a<noOfBra[j]; a++) { /*a<b*/
+             	int aInt=totalBraL[j]+a,bInt=totalBraL[i]+b; /*a<b*/
+             	int ax=inverseMap3[aInt].x, ay=inverseMap3[aInt].y, az=inverseMap3[aInt].z, bx=inverseMap3[bInt].x, by=inverseMap3[bInt].y, bz=inverseMap3[bInt].z;
+             	int increment;
+             	if (bx) increment=0; else if (by) increment=1; else /*if (bz)*/ increment=2;
+             	int am1 = map3[ax-delta[0][increment]][ay-delta[1][increment]][az-delta[2][increment]]-totalBraL[i-1]; /*a<b*/
+             	int bp1 = map3[bx+delta[0][increment]][by+delta[1][increment]][bz+delta[2][increment]]-totalBraL[j+1]; /*a<b*/
+             	int leftindex=noOfBra[j]*a+b; /*ok*/
+             	int rightindexA=noOfBra[i-1]*bp1+am1; /*a<b*/
+             	int rightindexB=noOfBra[i-1]*b+am1; /*a<b*/
+                HRRMAP2[j][i][leftindex].x=rightindexA;
+                HRRMAP2[j][i][leftindex].y=rightindexB;
+                HRRMAP2[j][i][leftindex].z=increment;
             }
         }
 
@@ -171,7 +189,8 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         }
     } 
 
-    void Integral_Pack::Genclass(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int n, int Ln, double *Ylm, int maxL){
+    void Integral_Pack::Genclass(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int n, int Ln, double *Ylm, int maxL){ //a>=b
+        if (a<b) {Genclass2(a, b, A, B, zetaA, zetaB, conA, conB, dconA, dconB, temp, n, Ln, Ylm, maxL); return;}
         int K=(Ln+1)*(Ln+1); 
         double ldn=lambda[n];
         bool lzero=(ldn<1e-15/roZ); //  
@@ -211,7 +230,6 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
                 swap = !swap;
                 double *Va = swap?V2:V1, *Vb = swap?V1:V2;
                 memset(Va,0,sizeof(double)*K*totalBraL[a+b+1]);
-
                 // ldn=0.0 is taken care of by separately. (3-term RR & trivial initial conditions) only p=0 contributes! LMRG2013 eqs 19c and 24
                 if (lzero && p==0) {
                     Va[0]=JpY00[0]*q[0]*gAB;
@@ -226,7 +244,6 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
                         if (aj>0) Va[Koffset(aplusIndex,0)] += aj*one2zeta*Va[Koffset(aminusIndex,0)];
                     }
                 }
-
                 // Fill e=0
                 if (!rzero && !lzero) {
                     double nfactor=q[n]*gAB*exp(-.25*sqr(ldn)/zeta)*pow(-.5*ldn/zeta/r,p);
@@ -237,7 +254,6 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
                 }
                 else if (rzero && !lzero) 
                     Va[0] = q[n]*gAB*exp(-.25*sqr(ldn)/zeta)*pow(-.5*sqr(ldn)/zeta,p)*JpY00[p]; // LMRG2013 l=m=0 only - eq 19b  
-
                 // Fill higher e
                 if (!lzero) {
                     for (int e=1; e<a+b+1-p; e++) for (int i=0; i<noOfBra[e]; i++)  {
@@ -324,6 +340,153 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
             }
             free(HRR[i][j-1]);
             if (i==a+b-j) free(HRR[i+1][j-1]);
+        }
+        //memcpy(temp, HRR[a][b], noOfBra[a]*noOfBra[b]*K*sizeof(double)); free(HRR[a][b]);
+    }
+
+    void Integral_Pack::Genclass2(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int n, int Ln, double *Ylm, int maxL){ //a<b
+        int K=(Ln+1)*(Ln+1); 
+        double ldn=lambda[n];
+        bool lzero=(ldn<1e-15/roZ); //  
+        double onelambda = lzero? 0.0 : -1.0/ldn;
+        double* V1 = arrV; //malloc(totalBraL[a+b+1]*K*sizeof(double));
+        double* V2 = arrV+totalBraL[a+b+1]*K;
+        double (*HRR[a+1][a+b+1])[K]; /*a<b*/
+        for (int i=b; i<=a+b; i++) { /*a<b*/
+            if (i==b && a==0) HRR[0][b]=(double (*)[K])temp; /*a<b*/
+            else HRR[0][i] = (double (*)[K])(malloc(sizeof(double)*K*noOfBra[i])); /*a<b*/
+            if (HRR[0][i]==NULL) {printf("Integral_Pack.cc HRR[0][%d] allocation failed sized=%d*sizeof(double)\n",i,K*noOfBra[i]); exit(1);} /*a<b*/
+            memset(HRR[0][i],0,sizeof(double)*K*noOfBra[i]);
+        }
+        double J[Ln+a+b+1], *Y=NULL, rAB2=sqr(A[0]-B[0])+sqr(A[1]-B[1])+sqr(A[2]-B[2]);
+        if (Ylm==NULL) Y=(double *)malloc(sizeof(double)*K); 
+        // printf("A %e %e %e B %e %e %e\n",A[0],A[1],A[2],B[0],B[1],B[2]); 
+        for (int ii=0; ii<dconA; ii++) for (int jj=0; jj<dconB; jj++) {
+            double zeta=zetaA[ii]+zetaB[jj];
+            double P[3]={(zetaA[ii]*A[0]+zetaB[jj]*B[0])/zeta,(zetaA[ii]*A[1]+zetaB[jj]*B[1])/zeta,(zetaA[ii]*A[2]+zetaB[jj]*B[2])/zeta};
+            double gAB=exp(-zetaA[ii]*zetaB[jj]/zeta*rAB2)*pow(PI/zeta,1.5)*conA[ii]*conB[jj];
+            double one2zeta=.5/zeta;
+            double r=sqrt(sqr(P[0])+sqr(P[1])+sqr(P[2]));
+            bool rzero=(r<1e-15/roZ); // scaled so that this codition is insensitive to roZ
+            //printf("ii=%d jj=%d zetaA=%e zetaB=%e zeta=%e conA=%e conB=%e rAB2=%e gAB=%e\n",ii,jj,zetaA[ii],zetaB[jj],zeta,conA[ii],conB[jj],rAB2,gAB);
+            if (!lzero && !rzero) { 
+                // if (r<1e-14) printf("small r\n");
+                if (Ylm!=NULL)
+                    Y=&Ylm[(ii*dconB+jj)*(maxL+1)*(maxL+1)];
+                else {                
+                    double phi=atan2(P[1],P[0]),X=P[2]/r;
+                    GenY(Y,X,phi,Ln);                 
+                } // if (Ln<10) printf("IntegralPack ln204 J(%f,%d)\n",r*ldn,Ln+a+b); 
+                GenJ(J,r*ldn,Ln+a+b); // if (Ln<10) printf("OK\n");
+            } 
+            bool swap = false;
+            for (int p=a+b; p>=0; p--) {
+                swap = !swap;
+                double *Va = swap?V2:V1, *Vb = swap?V1:V2;
+                memset(Va,0,sizeof(double)*K*totalBraL[a+b+1]);
+                // ldn=0.0 is taken care of by separately. (3-term RR & trivial initial conditions) only p=0 contributes! LMRG2013 eqs 19c and 24
+                if (lzero && p==0) {
+                    Va[0]=JpY00[0]*q[0]*gAB;
+                    for (int e=1; e<a+b+1; e++) for (int i=0; i<noOfBra[e]; i++) {
+                        int aplusIndex = totalBraL[e]+i;
+                        int j=buildMap[aplusIndex]; // printf("j=%d\n",j);
+                        int x=inverseMap3[aplusIndex].x,y=inverseMap3[aplusIndex].y,z=inverseMap3[aplusIndex].z;
+                        int aIndex = map3[x-delta[0][j]][y-delta[1][j]][z-delta[2][j]];
+                        int aminusIndex = map3[abs(x-2*delta[0][j])][abs(y-2*delta[1][j])][abs(z-2*delta[2][j])]; // Be careful
+                        int aj = delta[0][j]*(x-1) + delta[1][j]*(y-1) + delta[2][j]*(z-1);
+                        Va[Koffset(aplusIndex,0)]=(P[j]-A[j])*Va[Koffset(aIndex,0)];
+                        if (aj>0) Va[Koffset(aplusIndex,0)] += aj*one2zeta*Va[Koffset(aminusIndex,0)];
+                    }
+                }
+                // Fill e=0
+                if (!rzero && !lzero) {
+                    double nfactor=q[n]*gAB*exp(-.25*sqr(ldn)/zeta)*pow(-.5*ldn/zeta/r,p);
+                    for (int l=0; l<=Ln; l++) {
+                        int ll=l*l+l; 
+                        for (int m=-l; m<=l; m++) Va[Koffset(0,ll+m)] = nfactor*J[l+p]*Y[ll+m]; // LHG2012 eq 23 LMRG2013 eq 19a
+                    }
+                }
+                else if (rzero && !lzero) 
+                    Va[0] = q[n]*gAB*exp(-.25*sqr(ldn)/zeta)*pow(-.5*sqr(ldn)/zeta,p)*JpY00[p]; // LMRG2013 l=m=0 only - eq 19b  
+                // Fill higher e
+                if (!lzero) {
+                    for (int e=1; e<a+b+1-p; e++) for (int i=0; i<noOfBra[e]; i++)  {
+                        int aplusIndex = totalBraL[e]+i;
+                        int j=buildMap[aplusIndex]; // printf("j=%d\n",j);
+                        int x=inverseMap3[aplusIndex].x,y=inverseMap3[aplusIndex].y,z=inverseMap3[aplusIndex].z;
+                        int aIndex = map3[x-delta[0][j]][y-delta[1][j]][z-delta[2][j]];
+                        int aminusIndex = map3[abs(x-2*delta[0][j])][abs(y-2*delta[1][j])][abs(z-2*delta[2][j])];
+                        int aj = delta[0][j]*(x-1) + delta[1][j]*(y-1) + delta[2][j]*(z-1);
+                        double pbj = P[j]-B[j]; /*a<b*/
+                        if (aj) for (int k=0; k<K; k++)
+                            Va[Koffset(aplusIndex,k)]=P[j]*Vb[Koffset(aIndex,k)]+pbj*Va[Koffset(aIndex,k)]+aj*one2zeta*(Va[Koffset(aminusIndex,k)]+Vb[Koffset(aminusIndex,k)]); /*a<b*/
+                        else for (int k=0; k<K; k++)
+                            Va[Koffset(aplusIndex,k)] = P[j]*Vb[Koffset(aIndex,k)]+pbj*Va[Koffset(aIndex,k)]; /*a<b*/
+
+                        switch (j) {
+                        case 2: //z
+                            for (int l=1; l<=Ln; l++) {
+                                int ll=l*l+l; int ll1=l*l-l;
+                                for (int m=-l+1; m<l; m++) Va[Koffset(aplusIndex,ll+m)] += onelambda*cz[ll+m]*Vb[Koffset(aIndex,ll1+m)];
+                            }
+                        break;
+                        case 1: //y
+                            if (Ln>=1) {
+                                Va[Koffset(aplusIndex,1)] += onelambda*cyplus[1]*Vb[Koffset(aIndex,0)];
+                                Va[Koffset(aplusIndex,3)] += onelambda*cyminus[3]*Vb[Koffset(aIndex,0)];
+                            }
+                            for (int l=2; l<=Ln; l++) {
+                                int ll=l*l+l; int ll1=l*l-l;
+                                Va[Koffset(aplusIndex,ll-l)] += onelambda*cyplus[ll-l]*Vb[Koffset(aIndex,ll1+l-1)];
+                                Va[Koffset(aplusIndex,ll+l)] += onelambda*cyminus[ll+l]*Vb[Koffset(aIndex,ll1-l+1)];
+                                Va[Koffset(aplusIndex,ll-l+1)] += onelambda*cyplus[ll-l+1]*Vb[Koffset(aIndex,ll1+l-2)];
+                                Va[Koffset(aplusIndex,ll+l-1)] += onelambda*cyminus[ll+l-1]*Vb[Koffset(aIndex,ll1-l+2)];
+                                for (int m=-l+2; m<l-1; m++) Va[Koffset(aplusIndex,ll+m)] += onelambda*(cyplus[ll+m]*Vb[Koffset(aIndex,ll1-m-1)]+cyminus[ll+m]*Vb[Koffset(aIndex,ll1-m+1)]);
+                            }
+                        break;
+                        //case 0:
+                        default: //x
+                            if (Ln>=1) {
+                                Va[Koffset(aplusIndex,1)] += onelambda*cxplus[1]*Vb[Koffset(aIndex,0)];
+                                Va[Koffset(aplusIndex,3)] += onelambda*cxminus[3]*Vb[Koffset(aIndex,0)];
+                            }
+                            for (int l=2; l<=Ln; l++) {
+                                int ll=l*l+l; int ll1=l*l-l;
+                                Va[Koffset(aplusIndex,ll-l)] += onelambda*cxplus[ll-l]*Vb[Koffset(aIndex,ll1-l+1)];
+                                Va[Koffset(aplusIndex,ll+l)] += onelambda*cxminus[ll+l]*Vb[Koffset(aIndex,ll1+l-1)];
+                                Va[Koffset(aplusIndex,ll-l+1)] += onelambda*cxplus[ll-l+1]*Vb[Koffset(aIndex,ll1-l+2)];
+                                Va[Koffset(aplusIndex,ll+l-1)] += onelambda*cxminus[ll+l-1]*Vb[Koffset(aIndex,ll1+l-2)];                                
+                                for (int m=-l+2; m<l-1; m++) Va[Koffset(aplusIndex,ll+m)] += onelambda*(cxplus[ll+m]*Vb[Koffset(aIndex,ll1+m+1)]+cxminus[ll+m]*Vb[Koffset(aIndex,ll1+m-1)]);
+
+                            }
+                        }
+                    }
+                }
+
+            }
+            double* Vx = swap ? V2 : V1;
+            for (int i=b; i<=a+b; i++) for (int bra=0; bra<noOfBra[i]; bra++) for (int k=0; k<K; k++) /*a<b*/
+                HRR[0][i][bra][k] += Vx[Koffset(bra+totalBraL[i],k)]; // cblas_daxpy(K, 1.0, Va[bra+totalBraL[i]], 1, HRR[i][0][bra], 1); /*a<b*/
+        }
+        if (Ylm==NULL) free(Y);
+        double dd[3]={B[0]-A[0], B[1]-A[1], B[2]-A[2]}; /*a<b*/
+        for (int j=1; j<=a; j++) for (int i=b; i<=a+b-j; i++) { /*a<b*/
+            if (i==a && j==b) HRR[a][b]=(double (*)[K])temp;
+            else HRR[i][j]=(double (*)[K])(malloc(sizeof(double)*K*noOfBra[i]*noOfBra[j]));
+            if (HRR[i][j]==NULL) {printf("Integral_Pack.cc HRR[%d][%d] size=%d*sizeof(double)\n",i,j,K*noOfBra[i]*noOfBra[j]); exit(1);}
+            for (int ii=0; ii<noOfBra[i]; ii++) for (int jj=0; jj<noOfBra[j]; jj++) {
+            	int lindex = ii*noOfBra[j] + jj; /*OK*/
+            	int rindex1=HRRMAP2[j][i][lindex].x; /*a<b*/
+            	int rindex2=HRRMAP2[j][i][lindex].y; /*a<b*/
+            	double factor = dd[HRRMAP2[j][i][lindex].z]; /*a<b*/
+                for (int k=0; k<K; k++) HRR[i][j][lindex][k]=factor*HRR[i-1][j][rindex2][k]+HRR[i-1][j+1][rindex1][k]; /*a<b*/
+                /*double* lhs = HRR[i][j][lindex], rhs1 = HRR[i+1][j-1][rindex1], rhs2 = HRR[i][j-1][rindex2];
+                // lhs[...]=factor*rhs2[...]+rhs1[...]
+                cblas_dcopy(K, rhs1, 1, lhs, 1); // lhs[...] = rhs1[...]
+                cblas_daxpy(K, factor, rhs2, 1, lhs, 1); // lhs[...] = factor*rhs2[...] + lhs[...]*/
+            }
+            free(HRR[i-1][j]); /*a<b*/
+            if (i==a+b-j) free(HRR[i-1][j+1]); /*a<b*/
         }
         //memcpy(temp, HRR[a][b], noOfBra[a]*noOfBra[b]*K*sizeof(double)); free(HRR[a][b]);
     }

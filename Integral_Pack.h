@@ -44,7 +44,7 @@ namespace au {
                             Point inverseMap3[MAX_TOTAL_BRA_L];
                             int buildMap[MAX_TOTAL_BRA_L];
                             int totalBraL[MAX_BRA_L+2],noOfBra[MAX_BRA_L+1];
-                            Point *HRRMAP[MAX_BRA_L+1][MAX_BRA_L+1];
+                            Point *HRRMAP[MAX_BRA_L+1][MAX_BRA_L+1],*HRRMAP2[MAX_BRA_L+1][MAX_BRA_L+1];
 
                             // KET
                             #define MAX_KET_L 200
@@ -60,6 +60,8 @@ namespace au {
                             void initializeEwald(int N, int L, double Omega, double thresh, double rad);
                             void GenJ(double *B, double x, int L);
                             void GenY(double *Y, double X, double phi, int L);
+
+                            void Genclass2(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int N, int Ln, double *Ylm, int maxL);
 
                     };
                 }
