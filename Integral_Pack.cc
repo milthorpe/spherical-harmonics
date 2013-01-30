@@ -469,7 +469,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
             for (int ii=0; ii<noOfBra[i]; ii++) for (int jj=0; jj<noOfBra[j]; jj++) {
             	int lindex = ii*noOfBra[j] + jj; /*OK*/
             	int rindex1=HRRMAP2[i][j][lindex].x; /*OK*/
-            	int rindex2=HRRMAP2[i][j][lindex].y; /*aOK*/
+            	int rindex2=HRRMAP2[i][j][lindex].y; /*OK*/
             	double factor = dd[HRRMAP2[i][j][lindex].z]; /*a<b*/
                 for (int k=0; k<K; k++) HRR[i][j][lindex][k]=factor*HRR[i-1][j][rindex2][k]+HRR[i-1][j+1][rindex1][k]; /*a<b*/
             }
