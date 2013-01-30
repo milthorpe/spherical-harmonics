@@ -52,7 +52,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
     Integral_Pack::~Integral_Pack() {
         free(lambda); free(q); free(arrV); 
         for (int i=1; i<=MAX_BRA_L; i++) for (int j=1; j<=i; j++) {
-            free(HRRMAP[i][j]); free(HRRMAP2[i][j]);
+            free(HRRMAP[i][j]); free(HRRMAP2[j][i]);
         }
     }
 
@@ -97,25 +97,25 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
                 HRRMAP[i][j][leftindex].z=increment;
             }
         }
-        // HRR2
-        for (int i=1; i<=MAX_BRA_L; i++) for (int j=1; j<=i; j++) { /*ok*/
-            HRRMAP2[j][i] = (Point *) malloc(sizeof(Point)*noOfBra[i]*noOfBra[j]); /*a<b*/
-            if (HRRMAP2[j][i]==NULL) {printf("Integral_Pack.cc malloc failed at ln75\n"); exit(1);} /*a<b*/
-            for (int b=0; b<noOfBra[i]; b++) for (int a=0; a<noOfBra[j]; a++) { /*a<b*/
-             	int aInt=totalBraL[j]+a,bInt=totalBraL[i]+b; /*a<b*/
+        // HRR2 
+        
+        for (int i=1; i<=MAX_BRA_L; i++) for (int j=1; j<=i; j++) { // ok
+            HRRMAP2[j][i] = (Point *) malloc(sizeof(Point)*noOfBra[i]*noOfBra[j]); // a<b
+            if (HRRMAP2[j][i]==NULL) {printf("Integral_Pack.cc malloc failed at ln104\n"); exit(1);} // a<b
+            for (int b=0; b<noOfBra[i]; b++) for (int a=0; a<noOfBra[j]; a++) { // a<b
+             	int aInt=totalBraL[j]+a, bInt=totalBraL[i]+b, increment; // a<b
              	int ax=inverseMap3[aInt].x, ay=inverseMap3[aInt].y, az=inverseMap3[aInt].z, bx=inverseMap3[bInt].x, by=inverseMap3[bInt].y, bz=inverseMap3[bInt].z;
-             	int increment;
-             	if (bx) increment=0; else if (by) increment=1; else /*if (bz)*/ increment=2;
-             	int am1 = map3[ax-delta[0][increment]][ay-delta[1][increment]][az-delta[2][increment]]-totalBraL[j-1]; /*ok*/
-             	int bp1 = map3[bx+delta[0][increment]][by+delta[1][increment]][bz+delta[2][increment]]-totalBraL[i+1]; /*ok*/
-             	int leftindex=noOfBra[i]*a+b; /*a<b*/
-             	int rightindexA=noOfBra[i-1]*am1+bp1; /*a<b*/
-             	int rightindexB=noOfBra[i-1]*am1+b; /*a<b*/
+             	if (ax) increment=0; else if (ay) increment=1; else increment=2; // a<b
+             	int am1 = map3[ax-delta[0][increment]][ay-delta[1][increment]][az-delta[2][increment]]-totalBraL[j-1]; // ok
+             	int bp1 = map3[bx+delta[0][increment]][by+delta[1][increment]][bz+delta[2][increment]]-totalBraL[i+1]; // ok
+             	int leftindex=noOfBra[i]*a+b; // a<b
+             	int rightindexA=noOfBra[i-1]*am1+bp1; // a<b
+             	int rightindexB=noOfBra[i-1]*am1+b; // a<b
                 HRRMAP2[j][i][leftindex].x=rightindexA;
                 HRRMAP2[j][i][leftindex].y=rightindexB;
                 HRRMAP2[j][i][leftindex].z=increment;
             }
-        }
+        } 
 
         // LMRG2013 eq 22a-22f
         for (l=0; l<=MAX_KET_L; l++) for (m=-l; m<=l; m++) {
@@ -189,8 +189,8 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         }
     } 
 
-    void Integral_Pack::Genclass(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int n, int Ln, double *Ylm, int maxL){ //a>=b
-        if (a<b) {Genclass2(a, b, A, B, zetaA, zetaB, conA, conB, dconA, dconB, temp, n, Ln, Ylm, maxL); return;}
+    void Integral_Pack::Genclass(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int n, int Ln, double *Ylm, int maxL){ // This function is for a>=b
+        if (a<b) { Genclass2(a, b, A, B, zetaA, zetaB, conA, conB, dconA, dconB, temp, n, Ln, Ylm, maxL); return;}
         int K=(Ln+1)*(Ln+1); 
         double ldn=lambda[n];
         bool lzero=(ldn<1e-15/roZ); //  
