@@ -514,16 +514,24 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         fptr2=(FILE *)fopen(fname2,"r");
         if (!fptr1 || !fptr2) {printf("Integral_Pack.cc can't find Hermite root/weight for Ewald calculation.\n"); exit(1);}
         for (n=0; n<=Nprime; n++) {
-            fscanf(fptr1,"%lf",&lambda[n]); lambda[n]*=2.*Omega;
-            fscanf(fptr2,"%lf",&q[n]); q[n]=4.*sqrt(q[n]*Omega);
+            if (fscanf(fptr1,"%lf",&lambda[n]) != 1) {
+                fprintf(stderr, "error: invalid lambda[%d]\n", n);
+                exit(1);
+            }
+            lambda[n]*=2.*Omega;
+            if (fscanf(fptr2,"%lf",&q[n]) != 1) {
+                fprintf(stderr, "error: invalid q[%d]\n", n);
+                exit(1);
+            }
+            q[n]=4.*sqrt(q[n]*Omega);
         }
         fclose(fptr1); fclose(fptr2);
 
     }
 
-    int Integral_Pack::getNL(int *n_l) {
+    void Integral_Pack::getNL(int *n_l) {
         printf("*** Integral_Pack::getNL ****\n");
-        int n,l,maxn,maxl=-1;
+        int n,l,maxl=-1;
         double th=thresh/Nprime; // this thresh has been scaled
         //printf("th=%e thresh=%e roZ=%e\n",th,thresh,roZ);
         for (n=0; n<=Nprime; n++) {
@@ -533,10 +541,9 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
             
             printf("n=%d Ltest=%d\n",n,l);
             n_l[n+1]=l;
-            if (l!=-1) maxn=n;
             if (l>maxl) maxl=l;
         }
-        n_l[0]=Nprime;//maxn;
+        n_l[0]=Nprime;
         n_l[Nprime+2]=maxl;
         printf("*** Override N and L ***\n");
         printf("Ncal=%d Nprime=%d L=%d\n", Ncal,Nprime,maxl);

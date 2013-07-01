@@ -30,7 +30,7 @@ namespace au {
                             ~Integral_Pack();
                             void GenclassY(double *A, double *B, double *zetaA, double *zetaB, int dconA, int dconB, int Ln, double *Ylm);
                             void Genclass(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int N, int Ln, double *Ylm, int maxL);
-                            int getNL(int *n_l);
+                            void getNL(int *n_l);
 
                         private:
                             int N,L; double Type,roZ;
