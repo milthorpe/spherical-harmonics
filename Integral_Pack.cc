@@ -319,7 +319,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
             }
             double* Vx = swap ? V2 : V1;
             for (int i=a; i<=a+b; i++) for (int bra=0; bra<noOfBra[i]; bra++) for (int k=0; k<K; k++)
-                HRR[i][0][bra][k] = Vx[Koffset(bra+totalBraL[i],k)] + HRR[i][0][bra][k]; // cblas_daxpy(K, 1.0, Va[bra+totalBraL[i]], 1, HRR[i][0][bra], 1); 
+                HRR[i][0][bra][k] += Vx[Koffset(bra+totalBraL[i],k)]; // cblas_daxpy(K, 1.0, Va[bra+totalBraL[i]], 1, HRR[i][0][bra], 1); 
         }
         if (Ylm==NULL) free(Y);
         double dd[3]={A[0]-B[0],A[1]-B[1],A[2]-B[2]};   
@@ -557,3 +557,36 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
     }
 }
 
+/*
+int main() {
+
+    // Test Genclass
+    int a=2,b=0,N=10,L=10,dconA=6,dconB=3;
+    double A[3],B[3];
+    double conA[dconA],conB[dconB],zetaA[dconA],zetaB[dconB];
+
+    au::edu::anu::qm::ro::Integral_Pack* ip = new au::edu::anu::qm::ro::Integral_Pack(N, L, 0.3, 1e-6, 2.0, 1.0);
+
+    A[0]=.1; B[0]=.4;
+    A[1]=.2; B[1]=.3;
+    A[2]=.3; B[2]=.2;
+
+    zetaA[0]=1.;  conA[0]=6.;
+    zetaA[1]=2.;  conA[1]=5.;
+    zetaA[2]=3.;  conA[2]=4.;
+    zetaA[3]=4.;  conA[3]=3.;
+    zetaA[4]=5.;  conA[4]=2.;
+    zetaA[5]=6.;  conA[5]=1.;
+
+    zetaB[0]=1.;  conB[0]=1.5;
+    zetaB[1]=2.;  conB[1]=2.5;
+    zetaB[2]=4.5; conB[2]=3.5;
+
+    double temp[(L+1)*(L+1)*(a+1)*(a+2)/2*(b+1)*(b+2)/2],Y[(L+1)*(L+1)*dconA*dconB];
+    ip->GenclassY(A,B,zetaA,zetaB,dconA,dconB,L,Y);
+    for (int i=0; i<100000; i++)
+        ip->Genclass(a,b,A,B,zetaA,zetaB,conA,conB,dconA,dconB,temp,N,L,Y,L);
+
+    delete ip;
+}
+*/
