@@ -524,11 +524,11 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
             q[n]=4.*sqrt(q[n]*Omega);
         }
         fclose(fptr1); fclose(fptr2);
-
+        //printf("*** Integral_Pack::initializeEwald ***\nInput: N=%d,L=%d,Omega=%f,thresh=%f,rad=%f\nOutput: Ncal=%d,N'=%d\n",N,L,Omega,thresh,rad,Ncal,Nprime);
     }
 
     void Integral_Pack::getNL(int *n_l) {
-        printf("*** Integral_Pack::getNL ****\n");
+        printf("*** Integral_Pack::getNL ***\n");
         int n,l,maxl=-1;
         double th=thresh/Nprime; // this thresh has been scaled
         //printf("th=%e thresh=%e roZ=%e\n",th,thresh,roZ);
