@@ -62,7 +62,7 @@ namespace au {
                             void GenY(double *Y, double X, double phi, int L);
 
                             void Genclass2(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int N, int Ln, double *Ylm, int maxL);
-
+                            void Genclass3(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int N, int Ln, double *Ylm, int maxL);
                     };
                 }
             }

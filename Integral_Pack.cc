@@ -109,8 +109,8 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
              	int am1 = map3[ax-delta[0][increment]][ay-delta[1][increment]][az-delta[2][increment]]-totalBraL[j-1]; // ok
              	int bp1 = map3[bx+delta[0][increment]][by+delta[1][increment]][bz+delta[2][increment]]-totalBraL[i+1]; // ok
              	int leftindex=noOfBra[i]*a+b; // a<b
-             	int rightindexA=noOfBra[i-1]*am1+bp1; // a<b
-             	int rightindexB=noOfBra[i-1]*am1+b; // a<b
+             	int rightindexA=noOfBra[i+1]*am1+bp1; // a<b
+             	int rightindexB=noOfBra[i]*am1+b; // a<b
                 HRRMAP2[j][i][leftindex].x=rightindexA;
                 HRRMAP2[j][i][leftindex].y=rightindexB;
                 HRRMAP2[j][i][leftindex].z=increment;
@@ -476,6 +476,32 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
             free(HRR[i-1][j]); /*a<b*/
             if (i==a+b-j) free(HRR[i-1][j+1]); /*a<b*/
         }
+    }
+
+    // For testing/debuging purpose only
+    void Integral_Pack::Genclass3(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int n, int Ln, double *Ylm, int maxL){
+        int muSize=((a+1)*(a+2))/2;
+        int nuSize=((b+1)*(b+2))/2;
+        int tempSize=muSize*nuSize*(Ln+1)*(Ln+1);
+        int YlmSize=dconA*dconB*(maxL+1)*(maxL+1);
+        double *temp2=(double *)malloc(sizeof(double)*tempSize);
+        double *Ylm2=(double *)malloc(sizeof(double)*YlmSize);
+
+        for (int ii=0; ii<dconA; ii++) for (int jj=0; jj<dconB; jj++) for (int k=0; k<(maxL+1)*(maxL+1); k++)
+            Ylm2[(jj*dconA+ii)*(maxL+1)*(maxL+1)+k]=Ylm[(ii*dconB+jj)*(maxL+1)*(maxL+1)+k];
+        
+        Genclass(b, a, B, A, zetaB, zetaA, conB, conA, dconB, dconA, temp2, n, Ln, Ylm2, maxL);
+
+        for (int mu=0; mu<muSize; mu++) for (int nu=0; nu<nuSize; nu++) for (int k=0; k<(Ln+1)*(Ln+1); k++)
+            temp[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ] = temp2[ (nu*muSize+mu)*(Ln+1)*(Ln+1)+k ];
+
+        double *temp3=(double *)malloc(sizeof(double)*tempSize);
+        Genclass2(a, b, A, B, zetaA, zetaB, conA, conB, dconA, dconB, temp3, n, Ln, Ylm, maxL);
+        for (int mu=0; mu<muSize; mu++) for (int nu=0; nu<nuSize; nu++) for (int k=0; k<(Ln+1)*(Ln+1); k++)
+            if (fabs(temp[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ] - temp3[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ])>1e-10) 
+            printf("%d %d | %d %d | %d | %e %e\n",a,b,mu,nu,k,temp[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ],temp3[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ]);
+
+        free(temp2); free(Ylm2);
     }
 
     void Integral_Pack::initializeCoulomb(int N){
