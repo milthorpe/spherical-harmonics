@@ -569,8 +569,8 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         }
         n_l[0]=Nprime;
         n_l[Nprime+2]=maxl;
-        printf("*** Override N and L ***\n");
         printf("Ncal=%d Nprime=%d L=%d\n", Ncal,Nprime,maxl);
+        printf("*** End of Integral_Pack::getNL ***\n");
     }
 
 // end Integral_Pack
