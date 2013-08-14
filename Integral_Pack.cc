@@ -178,7 +178,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         }
     }
 
-    void Integral_Pack::GenclassY(double *A, double *B, double *zetaA, double *zetaB, int dconA, int dconB, int Ln, double *Ylm){
+    void Integral_Pack::GenclassY(const double *A, const double *B, const double *zetaA, const double *zetaB, int dconA, int dconB, int Ln, double *Ylm){
         for (int ii=0; ii<dconA; ii++) for (int jj=0; jj<dconB; jj++) {
             double zeta=zetaA[ii]+zetaB[jj];
             double P[3]={(zetaA[ii]*A[0]+zetaB[jj]*B[0])/zeta,(zetaA[ii]*A[1]+zetaB[jj]*B[1])/zeta,(zetaA[ii]*A[2]+zetaB[jj]*B[2])/zeta};
@@ -189,8 +189,8 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         }
     } 
 
-    void Integral_Pack::Genclass(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int n, int Ln, double *Ylm, int maxL){ // This function is for a>=b
-        if (a<b) { Genclass2(a, b, A, B, zetaA, zetaB, conA, conB, dconA, dconB, temp, n, Ln, Ylm, maxL); return;}
+    void Integral_Pack::Genclass(int a, int b, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double *aux) { // This function is for a>=b
+        if (a<b) { Genclass2(a, b, A, B, zetaA, zetaB, conA, conB, dconA, dconB, n, Ln, Ylm, maxL, aux); return;}
         int K=(Ln+1)*(Ln+1); 
         double ldn=lambda[n];
         bool lzero=(ldn<1e-15/roZ); //  
@@ -199,7 +199,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         double* V2 = arrV+totalBraL[a+b+1]*K;
         double (*HRR[a+b+1][b+1])[K];
         for (int i=a; i<=a+b; i++) {
-            if (i==a && b==0) HRR[a][0]=(double (*)[K])temp; 
+            if (i==a && b==0) HRR[a][0]=(double (*)[K])aux; 
             else HRR[i][0] = (double (*)[K])(malloc(sizeof(double)*K*noOfBra[i]));
             if (HRR[i][0]==NULL) {printf("Integral_Pack.cc HRR[%d][0] allocation failed sized=%d*sizeof(double)\n",i,K*noOfBra[i]); exit(1);}
             memset(HRR[i][0],0,sizeof(double)*K*noOfBra[i]);
@@ -324,7 +324,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         if (Ylm==NULL) free(Y);
         double dd[3]={A[0]-B[0],A[1]-B[1],A[2]-B[2]};   
         for (int j=1; j<=b; j++) for (int i=a; i<=a+b-j; i++)  {
-            if (i==a && j==b) HRR[a][b]=(double (*)[K])temp;
+            if (i==a && j==b) HRR[a][b]=(double (*)[K])aux;
             else HRR[i][j]=(double (*)[K])(malloc(sizeof(double)*K*noOfBra[i]*noOfBra[j]));
             if (HRR[i][j]==NULL) {printf("Integral_Pack.cc HRR[%d][%d] size=%d*sizeof(double)\n",i,j,K*noOfBra[i]*noOfBra[j]); exit(1);}
             for (int ii=0; ii<noOfBra[i]; ii++) for (int jj=0; jj<noOfBra[j]; jj++) {
@@ -341,10 +341,10 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
             free(HRR[i][j-1]);
             if (i==a+b-j) free(HRR[i+1][j-1]);
         }
-        //memcpy(temp, HRR[a][b], noOfBra[a]*noOfBra[b]*K*sizeof(double)); free(HRR[a][b]);
+        //memcpy(aux, HRR[a][b], noOfBra[a]*noOfBra[b]*K*sizeof(double)); free(HRR[a][b]);
     }
 
-    void Integral_Pack::Genclass2(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int n, int Ln, double *Ylm, int maxL){ //a<b
+    void Integral_Pack::Genclass2(int a, int b, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double *aux) { //a<b
         int K=(Ln+1)*(Ln+1); 
         double ldn=lambda[n];
         bool lzero=(ldn<1e-15/roZ); //  
@@ -353,7 +353,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         double* V2 = arrV+totalBraL[a+b+1]*K;
         double (*HRR[a+1][a+b+1])[K]; /*a<b*/
         for (int i=b; i<=a+b; i++) { /*a<b*/
-            if (i==b && a==0) HRR[0][b]=(double (*)[K])temp; /*a<b*/
+            if (i==b && a==0) HRR[0][b]=(double (*)[K])aux; /*a<b*/
             else HRR[0][i] = (double (*)[K])(malloc(sizeof(double)*K*noOfBra[i])); /*a<b*/
             if (HRR[0][i]==NULL) {printf("Integral_Pack.cc HRR[0][%d] allocation failed sized=%d*sizeof(double)\n",i,K*noOfBra[i]); exit(1);} /*a<b*/
             memset(HRR[0][i],0,sizeof(double)*K*noOfBra[i]);
@@ -463,7 +463,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         if (Ylm==NULL) free(Y);
         double dd[3]={B[0]-A[0], B[1]-A[1], B[2]-A[2]}; /*a<b*/
         for (int i=1; i<=a; i++) for (int j=b; j<=a+b-i; j++) { /*a<b*/
-            if (i==a && j==b) HRR[a][b]=(double (*)[K])temp;
+            if (i==a && j==b) HRR[a][b]=(double (*)[K])aux;
             else HRR[i][j]=(double (*)[K])(malloc(sizeof(double)*K*noOfBra[i]*noOfBra[j]));
             if (HRR[i][j]==NULL) {printf("Integral_Pack.cc HRR[%d][%d] size=%d*sizeof(double)\n",i,j,K*noOfBra[i]*noOfBra[j]); exit(1);}
             for (int ii=0; ii<noOfBra[i]; ii++) for (int jj=0; jj<noOfBra[j]; jj++) {
@@ -479,29 +479,29 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
     }
 
     // For testing/debuging purpose only
-    void Integral_Pack::Genclass3(int a, int b, double *A, double *B, double *zetaA, double *zetaB, double *conA, double *conB, int dconA, int dconB, double* temp, int n, int Ln, double *Ylm, int maxL){
+    void Integral_Pack::Genclass3(int a, int b, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double *aux) {
         int muSize=((a+1)*(a+2))/2;
         int nuSize=((b+1)*(b+2))/2;
-        int tempSize=muSize*nuSize*(Ln+1)*(Ln+1);
+        int auxSize=muSize*nuSize*(Ln+1)*(Ln+1);
         int YlmSize=dconA*dconB*(maxL+1)*(maxL+1);
-        double *temp2=(double *)malloc(sizeof(double)*tempSize);
+        double *aux2=(double *)malloc(sizeof(double)*auxSize);
         double *Ylm2=(double *)malloc(sizeof(double)*YlmSize);
 
         for (int ii=0; ii<dconA; ii++) for (int jj=0; jj<dconB; jj++) for (int k=0; k<(maxL+1)*(maxL+1); k++)
             Ylm2[(jj*dconA+ii)*(maxL+1)*(maxL+1)+k]=Ylm[(ii*dconB+jj)*(maxL+1)*(maxL+1)+k];
         
-        Genclass(b, a, B, A, zetaB, zetaA, conB, conA, dconB, dconA, temp2, n, Ln, Ylm2, maxL);
+        Genclass(b, a, B, A, zetaB, zetaA, conB, conA, dconB, dconA, n, Ln, Ylm2, maxL, aux2);
 
         for (int mu=0; mu<muSize; mu++) for (int nu=0; nu<nuSize; nu++) for (int k=0; k<(Ln+1)*(Ln+1); k++)
-            temp[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ] = temp2[ (nu*muSize+mu)*(Ln+1)*(Ln+1)+k ];
+            aux[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ] = aux2[ (nu*muSize+mu)*(Ln+1)*(Ln+1)+k ];
 
-        double *temp3=(double *)malloc(sizeof(double)*tempSize);
-        Genclass2(a, b, A, B, zetaA, zetaB, conA, conB, dconA, dconB, temp3, n, Ln, Ylm, maxL);
+        double *aux3=(double *)malloc(sizeof(double)*auxSize);
+        Genclass2(a, b, A, B, zetaA, zetaB, conA, conB, dconA, dconB, n, Ln, Ylm, maxL, aux3);
         for (int mu=0; mu<muSize; mu++) for (int nu=0; nu<nuSize; nu++) for (int k=0; k<(Ln+1)*(Ln+1); k++)
-            if (fabs(temp[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ] - temp3[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ])>1e-10) 
-            printf("%d %d | %d %d | %d | %e %e\n",a,b,mu,nu,k,temp[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ],temp3[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ]);
+            if (fabs(aux[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ] - aux3[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ])>1e-10) 
+            printf("%d %d | %d %d | %d | %e %e\n",a,b,mu,nu,k,aux[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ],aux3[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ]);
 
-        free(temp2); free(Ylm2);
+        free(aux2); free(Ylm2);
     }
 
     void Integral_Pack::initializeCoulomb(int N){
@@ -606,10 +606,10 @@ int main() {
     zetaB[1]=2.;  conB[1]=2.5;
     zetaB[2]=4.5; conB[2]=3.5;
 
-    double temp[(L+1)*(L+1)*(a+1)*(a+2)/2*(b+1)*(b+2)/2],Y[(L+1)*(L+1)*dconA*dconB];
+    double aux[(L+1)*(L+1)*(a+1)*(a+2)/2*(b+1)*(b+2)/2],Y[(L+1)*(L+1)*dconA*dconB];
     ip->GenclassY(A,B,zetaA,zetaB,dconA,dconB,L,Y);
     for (int i=0; i<100000; i++)
-        ip->Genclass(a,b,A,B,zetaA,zetaB,conA,conB,dconA,dconB,temp,N,L,Y,L);
+        ip->Genclass(a,b,A,B,zetaA,zetaB,conA,conB,dconA,dconB,aux,N,L,Y,L);
 
     delete ip;
 }
