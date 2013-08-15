@@ -2,14 +2,15 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "bessel4.h"
-#include "Integral_Pack.h"
 
 #ifdef __X10_HEADERS
 #include <x10aux/config.h>
 #include <x10aux/RTT.h>
 using namespace x10aux;
 #endif
+
+#include "bessel4.h"
+#include "Integral_Pack.h"
 
 #define sqr(x) ((x)*(x))
 #define SQRT2 1.4142135623730951
@@ -189,22 +190,22 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         }
     } 
 
-    void Integral_Pack::Genclass(int a, int b, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double *aux) { // This function is for a>=b
-        if (a<b) { Genclass2(a, b, A, B, zetaA, zetaB, conA, conB, dconA, dconB, n, Ln, Ylm, maxL, aux); return;}
+    void Integral_Pack::Genclass(int angA, int angB, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double *aux) { // This function is for a>=b
+        if (angA<angB) { Genclass2(angA, angB, A, B, zetaA, zetaB, conA, conB, dconA, dconB, n, Ln, Ylm, maxL, aux); return;}
         int K=(Ln+1)*(Ln+1); 
         double ldn=lambda[n];
         bool lzero=(ldn<1e-15/roZ); //  
         double onelambda = lzero? 0.0 : -1.0/ldn;
-        double* V1 = arrV; //malloc(totalBraL[a+b+1]*K*sizeof(double));
-        double* V2 = arrV+totalBraL[a+b+1]*K;
-        double (*HRR[a+b+1][b+1])[K];
-        for (int i=a; i<=a+b; i++) {
-            if (i==a && b==0) HRR[a][0]=(double (*)[K])aux; 
+        double* V1 = arrV; //malloc(totalBraL[angA+angB+1]*K*sizeof(double));
+        double* V2 = arrV+totalBraL[angA+angB+1]*K;
+        double (*HRR[angA+angB+1][angB+1])[K];
+        for (int i=angA; i<=angA+angB; i++) {
+            if (i==angA && angB==0) HRR[angA][0]=(double (*)[K])aux; 
             else HRR[i][0] = (double (*)[K])(malloc(sizeof(double)*K*noOfBra[i]));
             if (HRR[i][0]==NULL) {printf("Integral_Pack.cc HRR[%d][0] allocation failed sized=%d*sizeof(double)\n",i,K*noOfBra[i]); exit(1);}
             memset(HRR[i][0],0,sizeof(double)*K*noOfBra[i]);
         }
-        double J[Ln+a+b+1], *Y=NULL, rAB2=sqr(A[0]-B[0])+sqr(A[1]-B[1])+sqr(A[2]-B[2]);
+        double J[Ln+angA+angB+1], *Y=NULL, rAB2=sqr(A[0]-B[0])+sqr(A[1]-B[1])+sqr(A[2]-B[2]);
         if (Ylm==NULL) Y=(double *)malloc(sizeof(double)*K); 
         // printf("A %e %e %e B %e %e %e\n",A[0],A[1],A[2],B[0],B[1],B[2]); 
         for (int ii=0; ii<dconA; ii++) for (int jj=0; jj<dconB; jj++) {
@@ -222,18 +223,18 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
                 else {                
                     double phi=atan2(P[1],P[0]),X=P[2]/r;
                     GenY(Y,X,phi,Ln);                 
-                } // if (Ln<10) printf("IntegralPack ln204 J(%f,%d)\n",r*ldn,Ln+a+b); 
-                GenJ(J,r*ldn,Ln+a+b); // if (Ln<10) printf("OK\n");
+                } // if (Ln<10) printf("IntegralPack ln204 J(%f,%d)\n",r*ldn,Ln+angA+angB); 
+                GenJ(J,r*ldn,Ln+angA+angB); // if (Ln<10) printf("OK\n");
             } 
             bool swap = false;
-            for (int p=a+b; p>=0; p--) {
+            for (int p=angA+angB; p>=0; p--) {
                 swap = !swap;
                 double *Va = swap?V2:V1, *Vb = swap?V1:V2;
-                memset(Va,0,sizeof(double)*K*totalBraL[a+b+1]);
+                memset(Va,0,sizeof(double)*K*totalBraL[angA+angB+1]);
                 // ldn=0.0 is taken care of by separately. (3-term RR & trivial initial conditions) only p=0 contributes! LMRG2013 eqs 19c and 24
                 if (lzero && p==0) {
                     Va[0]=JpY00[0]*q[0]*gAB;
-                    for (int e=1; e<a+b+1; e++) for (int i=0; i<noOfBra[e]; i++) {
+                    for (int e=1; e<angA+angB+1; e++) for (int i=0; i<noOfBra[e]; i++) {
                         int aplusIndex = totalBraL[e]+i;
                         int j=buildMap[aplusIndex]; // printf("j=%d\n",j);
                         int x=inverseMap3[aplusIndex].x,y=inverseMap3[aplusIndex].y,z=inverseMap3[aplusIndex].z;
@@ -256,7 +257,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
                     Va[0] = q[n]*gAB*exp(-.25*sqr(ldn)/zeta)*pow(-.5*sqr(ldn)/zeta,p)*JpY00[p]; // LMRG2013 l=m=0 only - eq 19b  
                 // Fill higher e
                 if (!lzero) {
-                    for (int e=1; e<a+b+1-p; e++) for (int i=0; i<noOfBra[e]; i++)  {
+                    for (int e=1; e<angA+angB+1-p; e++) for (int i=0; i<noOfBra[e]; i++)  {
                         int aplusIndex = totalBraL[e]+i;
                         int j=buildMap[aplusIndex]; // printf("j=%d\n",j);
                         int x=inverseMap3[aplusIndex].x,y=inverseMap3[aplusIndex].y,z=inverseMap3[aplusIndex].z;
@@ -318,13 +319,13 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
 
             }
             double* Vx = swap ? V2 : V1;
-            for (int i=a; i<=a+b; i++) for (int bra=0; bra<noOfBra[i]; bra++) for (int k=0; k<K; k++)
+            for (int i=angA; i<=angA+angB; i++) for (int bra=0; bra<noOfBra[i]; bra++) for (int k=0; k<K; k++)
                 HRR[i][0][bra][k] += Vx[Koffset(bra+totalBraL[i],k)]; // cblas_daxpy(K, 1.0, Va[bra+totalBraL[i]], 1, HRR[i][0][bra], 1); 
         }
         if (Ylm==NULL) free(Y);
         double dd[3]={A[0]-B[0],A[1]-B[1],A[2]-B[2]};   
-        for (int j=1; j<=b; j++) for (int i=a; i<=a+b-j; i++)  {
-            if (i==a && j==b) HRR[a][b]=(double (*)[K])aux;
+        for (int j=1; j<=angB; j++) for (int i=angA; i<=angA+angB-j; i++)  {
+            if (i==angA && j==angB) HRR[angA][angB]=(double (*)[K])aux;
             else HRR[i][j]=(double (*)[K])(malloc(sizeof(double)*K*noOfBra[i]*noOfBra[j]));
             if (HRR[i][j]==NULL) {printf("Integral_Pack.cc HRR[%d][%d] size=%d*sizeof(double)\n",i,j,K*noOfBra[i]*noOfBra[j]); exit(1);}
             for (int ii=0; ii<noOfBra[i]; ii++) for (int jj=0; jj<noOfBra[j]; jj++) {
@@ -339,26 +340,26 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
                 cblas_daxpy(K, factor, rhs2, 1, lhs, 1); // lhs[...] = factor*rhs2[...] + lhs[...]*/
             }
             free(HRR[i][j-1]);
-            if (i==a+b-j) free(HRR[i+1][j-1]);
+            if (i==angA+angB-j) free(HRR[i+1][j-1]);
         }
-        //memcpy(aux, HRR[a][b], noOfBra[a]*noOfBra[b]*K*sizeof(double)); free(HRR[a][b]);
+        //memcpy(aux, HRR[angA][angB], noOfBra[angA]*noOfBra[angB]*K*sizeof(double)); free(HRR[angA][angB]);
     }
 
-    void Integral_Pack::Genclass2(int a, int b, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double *aux) { //a<b
+    void Integral_Pack::Genclass2(int angA, int angB, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double *aux) { //a<b
         int K=(Ln+1)*(Ln+1); 
         double ldn=lambda[n];
         bool lzero=(ldn<1e-15/roZ); //  
         double onelambda = lzero? 0.0 : -1.0/ldn;
         double* V1 = arrV; 
-        double* V2 = arrV+totalBraL[a+b+1]*K;
-        double (*HRR[a+1][a+b+1])[K]; /*a<b*/
-        for (int i=b; i<=a+b; i++) { /*a<b*/
-            if (i==b && a==0) HRR[0][b]=(double (*)[K])aux; /*a<b*/
-            else HRR[0][i] = (double (*)[K])(malloc(sizeof(double)*K*noOfBra[i])); /*a<b*/
+        double* V2 = arrV+totalBraL[angA+angB+1]*K;
+        double (*HRR[angA+1][angA+angB+1])[K]; /*angA<angB*/
+        for (int i=angB; i<=angA+angB; i++) { /*angA<angB*/
+            if (i==angB && angA==0) HRR[0][angB]=(double (*)[K])aux; /*angA<angB*/
+            else HRR[0][i] = (double (*)[K])(malloc(sizeof(double)*K*noOfBra[i])); /*angA<angB*/
             if (HRR[0][i]==NULL) {printf("Integral_Pack.cc HRR[0][%d] allocation failed sized=%d*sizeof(double)\n",i,K*noOfBra[i]); exit(1);} /*a<b*/
             memset(HRR[0][i],0,sizeof(double)*K*noOfBra[i]);
         }
-        double J[Ln+a+b+1], *Y=NULL, rAB2=sqr(A[0]-B[0])+sqr(A[1]-B[1])+sqr(A[2]-B[2]);
+        double J[Ln+angA+angB+1], *Y=NULL, rAB2=sqr(A[0]-B[0])+sqr(A[1]-B[1])+sqr(A[2]-B[2]);
         if (Ylm==NULL) Y=(double *)malloc(sizeof(double)*K); 
         for (int ii=0; ii<dconA; ii++) for (int jj=0; jj<dconB; jj++) {
             double zeta=zetaA[ii]+zetaB[jj];
@@ -374,16 +375,16 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
                     double phi=atan2(P[1],P[0]),X=P[2]/r;
                     GenY(Y,X,phi,Ln);                 
                 } 
-                GenJ(J,r*ldn,Ln+a+b); 
+                GenJ(J,r*ldn,Ln+angA+angB); 
             } 
             bool swap = false;
-            for (int p=a+b; p>=0; p--) {
+            for (int p=angA+angB; p>=0; p--) {
                 swap = !swap;
                 double *Va = swap?V2:V1, *Vb = swap?V1:V2;
-                memset(Va,0,sizeof(double)*K*totalBraL[a+b+1]);
+                memset(Va,0,sizeof(double)*K*totalBraL[angA+angB+1]);
                 if (lzero && p==0) {
                     Va[0]=JpY00[0]*q[0]*gAB;
-                    for (int e=1; e<a+b+1; e++) for (int i=0; i<noOfBra[e]; i++) {
+                    for (int e=1; e<angA+angB+1; e++) for (int i=0; i<noOfBra[e]; i++) {
                         int aplusIndex = totalBraL[e]+i;
                         int j=buildMap[aplusIndex]; 
                         int x=inverseMap3[aplusIndex].x,y=inverseMap3[aplusIndex].y,z=inverseMap3[aplusIndex].z;
@@ -404,7 +405,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
                 else if (rzero && !lzero) 
                     Va[0] = q[n]*gAB*exp(-.25*sqr(ldn)/zeta)*pow(-.5*sqr(ldn)/zeta,p)*JpY00[p]; 
                 if (!lzero) {
-                    for (int e=1; e<a+b+1-p; e++) for (int i=0; i<noOfBra[e]; i++)  {
+                    for (int e=1; e<angA+angB+1-p; e++) for (int i=0; i<noOfBra[e]; i++)  {
                         int aplusIndex = totalBraL[e]+i;
                         int j=buildMap[aplusIndex]; 
                         int x=inverseMap3[aplusIndex].x,y=inverseMap3[aplusIndex].y,z=inverseMap3[aplusIndex].z;
@@ -457,31 +458,31 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
 
             }
             double* Vx = swap ? V2 : V1;
-            for (int i=b; i<=a+b; i++) for (int bra=0; bra<noOfBra[i]; bra++) for (int k=0; k<K; k++) /*a<b*/
-                HRR[0][i][bra][k] += Vx[Koffset(bra+totalBraL[i],k)]; /*a<b*/
+            for (int i=angB; i<=angA+angB; i++) for (int bra=0; bra<noOfBra[i]; bra++) for (int k=0; k<K; k++) /*angA<angB*/
+                HRR[0][i][bra][k] += Vx[Koffset(bra+totalBraL[i],k)]; /*angA<angB*/
         }
         if (Ylm==NULL) free(Y);
-        double dd[3]={B[0]-A[0], B[1]-A[1], B[2]-A[2]}; /*a<b*/
-        for (int i=1; i<=a; i++) for (int j=b; j<=a+b-i; j++) { /*a<b*/
-            if (i==a && j==b) HRR[a][b]=(double (*)[K])aux;
+        double dd[3]={B[0]-A[0], B[1]-A[1], B[2]-A[2]}; /*angA<angB*/
+        for (int i=1; i<=angA; i++) for (int j=angB; j<=angA+angB-i; j++) { /*angA<angB*/
+            if (i==angA && j==angB) HRR[angA][angB]=(double (*)[K])aux;
             else HRR[i][j]=(double (*)[K])(malloc(sizeof(double)*K*noOfBra[i]*noOfBra[j]));
             if (HRR[i][j]==NULL) {printf("Integral_Pack.cc HRR[%d][%d] size=%d*sizeof(double)\n",i,j,K*noOfBra[i]*noOfBra[j]); exit(1);}
             for (int ii=0; ii<noOfBra[i]; ii++) for (int jj=0; jj<noOfBra[j]; jj++) {
             	int lindex = ii*noOfBra[j] + jj; /*OK*/
             	int rindex1=HRRMAP2[i][j][lindex].x; /*OK*/
             	int rindex2=HRRMAP2[i][j][lindex].y; /*OK*/
-            	double factor = dd[HRRMAP2[i][j][lindex].z]; /*a<b*/
-                for (int k=0; k<K; k++) HRR[i][j][lindex][k]=factor*HRR[i-1][j][rindex2][k]+HRR[i-1][j+1][rindex1][k]; /*a<b*/
+            	double factor = dd[HRRMAP2[i][j][lindex].z]; /*angA<angB*/
+                for (int k=0; k<K; k++) HRR[i][j][lindex][k]=factor*HRR[i-1][j][rindex2][k]+HRR[i-1][j+1][rindex1][k]; /*angA<angB*/
             }
-            free(HRR[i-1][j]); /*a<b*/
-            if (i==a+b-j) free(HRR[i-1][j+1]); /*a<b*/
+            free(HRR[i-1][j]); /*angA<angB*/
+            if (i==angA+angB-j) free(HRR[i-1][j+1]); /*angA<angB*/
         }
     }
 
     // For testing/debuging purpose only
-    void Integral_Pack::Genclass3(int a, int b, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double *aux) {
-        int muSize=((a+1)*(a+2))/2;
-        int nuSize=((b+1)*(b+2))/2;
+    void Integral_Pack::Genclass3(int angA, int angB, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double *aux) {
+        int muSize=((angA+1)*(angA+2))/2;
+        int nuSize=((angB+1)*(angB+2))/2;
         int auxSize=muSize*nuSize*(Ln+1)*(Ln+1);
         int YlmSize=dconA*dconB*(maxL+1)*(maxL+1);
         double *aux2=(double *)malloc(sizeof(double)*auxSize);
@@ -490,16 +491,16 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         for (int ii=0; ii<dconA; ii++) for (int jj=0; jj<dconB; jj++) for (int k=0; k<(maxL+1)*(maxL+1); k++)
             Ylm2[(jj*dconA+ii)*(maxL+1)*(maxL+1)+k]=Ylm[(ii*dconB+jj)*(maxL+1)*(maxL+1)+k];
         
-        Genclass(b, a, B, A, zetaB, zetaA, conB, conA, dconB, dconA, n, Ln, Ylm2, maxL, aux2);
+        Genclass(angB, angA, B, A, zetaB, zetaA, conB, conA, dconB, dconA, n, Ln, Ylm2, maxL, aux2);
 
         for (int mu=0; mu<muSize; mu++) for (int nu=0; nu<nuSize; nu++) for (int k=0; k<(Ln+1)*(Ln+1); k++)
             aux[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ] = aux2[ (nu*muSize+mu)*(Ln+1)*(Ln+1)+k ];
 
         double *aux3=(double *)malloc(sizeof(double)*auxSize);
-        Genclass2(a, b, A, B, zetaA, zetaB, conA, conB, dconA, dconB, n, Ln, Ylm, maxL, aux3);
+        Genclass2(angA, angB, A, B, zetaA, zetaB, conA, conB, dconA, dconB, n, Ln, Ylm, maxL, aux3);
         for (int mu=0; mu<muSize; mu++) for (int nu=0; nu<nuSize; nu++) for (int k=0; k<(Ln+1)*(Ln+1); k++)
             if (fabs(aux[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ] - aux3[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ])>1e-10) 
-            printf("%d %d | %d %d | %d | %e %e\n",a,b,mu,nu,k,aux[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ],aux3[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ]);
+            printf("%d %d | %d %d | %d | %e %e\n",angA,angB,mu,nu,k,aux[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ],aux3[ (mu*nuSize+nu)*(Ln+1)*(Ln+1)+k ]);
 
         free(aux2); free(Ylm2);
     }

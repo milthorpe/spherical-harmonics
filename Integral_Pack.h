@@ -29,12 +29,14 @@ namespace au {
                             Integral_Pack(int N, int L,double Type,double roThresh, double rad, double roZ);
                             ~Integral_Pack();
                             void GenclassY(const double *A, const double *B, const double *zetaA, const double *zetaB, int dconA, int dconB, int Ln, double *Ylm);
-                            void Genclass(int a, int b, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int N, int Ln, double *Ylm, int maxL, double* aux);
+                            void Genclass(int angA, int angB, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double* aux);
                             void getNL(int *n_l);
 
                         private:
-                            int N,L; double Type,roZ;
-                            int Ncal,Nprime; double thresh,rad,omega;
+                            int N, L;
+                            double Type, roZ;
+                            int Ncal, Nprime;
+                            double thresh, rad,omega;
                             double *arrV;
                             // BRA
                             #define MAX_BRA_L 10 //for hh
@@ -61,8 +63,8 @@ namespace au {
                             void GenJ(double *B, double x, int L);
                             void GenY(double *Y, double X, double phi, int L);
 
-                            void Genclass2(int a, int b, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int N, int Ln, double *Ylm, int maxL, double* aux);
-                            void Genclass3(int a, int b, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int N, int Ln, double *Ylm, int maxL, double* aux);
+                            void Genclass2(int angA, int angB, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double* aux);
+                            void Genclass3(int angA, int angB, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double* aux);
                     };
                 }
             }
