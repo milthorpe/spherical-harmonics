@@ -537,7 +537,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         sprintf(fname2,"Ewald/weights%d.txt",Ncal);
         fptr1=(FILE *)fopen(fname1,"r");
         fptr2=(FILE *)fopen(fname2,"r");
-        if (!fptr1 || !fptr2) {printf("Integral_Pack.cc can't find Hermite root/weight for Ewald calculation.\n"); exit(1);}
+        if (!fptr1 || !fptr2) {printf("Integral_Pack.cc can't find %s or %s for Ewald calculation.\n", fname1, fname2); exit(1);}
         for (n=0; n<=Nprime; n++) {
             if (fscanf(fptr1,"%lf",&lambda[n]) != 1) {
                 fprintf(stderr, "error: invalid lambda[%d]\n", n);
