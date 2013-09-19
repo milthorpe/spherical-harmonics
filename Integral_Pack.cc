@@ -190,7 +190,8 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         }
     } 
 
-    void Integral_Pack::Genclass(int angA, int angB, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double *aux) { // This function is for a>=b
+    void Integral_Pack::Genclass(int angA, int angB, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, int off, double *aux) { // This function is for a>=b
+        aux+=off;
         if (angA<angB) { Genclass2(angA, angB, A, B, zetaA, zetaB, conA, conB, dconA, dconB, n, Ln, Ylm, maxL, aux); return;}
         int K=(Ln+1)*(Ln+1); 
         double ldn=lambda[n];
@@ -477,6 +478,11 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
             free(HRR[i-1][j]); /*angA<angB*/
             if (i==angA+angB-j) free(HRR[i-1][j+1]); /*angA<angB*/
         }
+    }
+
+    // w/o off set
+    void Integral_Pack::Genclass(int angA, int angB, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double *aux) {
+        Genclass(angA, angB, A, B, zetaA, zetaB, conA, conB, dconA, dconB, n, Ln, Ylm, maxL, 0, aux);
     }
 
     // For testing/debuging purpose only
