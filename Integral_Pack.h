@@ -28,6 +28,7 @@ namespace au {
                             static Integral_Pack* _make(int N, int L, double Type, double roThresh, double rad, double roZ);
                             Integral_Pack(int N, int L,double Type,double roThresh, double rad, double roZ);
                             ~Integral_Pack();
+                            static void GenY(double *Y, double X, double phi, int L);
                             void GenclassY(const double *A, const double *B, const double *zetaA, const double *zetaB, int dconA, int dconB, int Ln, double *Ylm);
                             void Genclass(int angA, int angB, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double* aux);
                             void Genclass(int angA, int angB, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, int off, double* aux);
@@ -62,7 +63,6 @@ namespace au {
                             void initializeCoulomb(int N);
                             void initializeEwald(int N, int L, double Omega, double thresh, double rad);
                             void GenJ(double *B, double x, int L);
-                            void GenY(double *Y, double X, double phi, int L);
 
                             void Genclass2(int angA, int angB, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double* aux);
                             void Genclass3(int angA, int angB, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double* aux);

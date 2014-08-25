@@ -170,13 +170,17 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
             }
         }
         // Real Ylm
-        for (l=0; l<=L; l++) {
-            Y[lm2k(l,0)]  = Plm[l][0];
-            for (m=1; m<=l; m++) {
-                Y[lm2k(l,m)]  = Plm[l][m]*SQRT2*cos(m*phi);
-                Y[lm2k(l,-m)] = Plm[l][m]*SQRT2*sin(m*phi);
+        Y[lm2k(0,0)]  = Plm[0][0];
+        for (m=1; m<=L; m++) {
+            Y[lm2k(m,0)]  = Plm[m][0];            
+            double cosmphi = cos(m*phi);
+            double sinmphi = sin(m*phi);
+            for (l=m; l<=L; l++) {
+                Y[lm2k(l,m)]  = Plm[l][m]*SQRT2*cosmphi;
+                Y[lm2k(l,-m)] = Plm[l][m]*SQRT2*sinmphi;
             }
         }
+
     }
 
     void Integral_Pack::GenclassY(const double *A, const double *B, const double *zetaA, const double *zetaB, int dconA, int dconB, int Ln, double *Ylm){
@@ -589,6 +593,16 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
 }
 
 /*
+#include <sys/time.h>
+
+int64_t TimeInMicros() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec*1000000 + tv.tv_usec;
+}
+
+const size_t ITERS = 100000;
+
 int main() {
 
     // Test Genclass
@@ -614,10 +628,43 @@ int main() {
     zetaB[2]=4.5; conB[2]=3.5;
 
     double aux[(L+1)*(L+1)*(a+1)*(a+2)/2*(b+1)*(b+2)/2],Y[(L+1)*(L+1)*dconA*dconB];
-    ip->GenclassY(A,B,zetaA,zetaB,dconA,dconB,L,Y);
-    for (int i=0; i<100000; i++)
-        ip->Genclass(a,b,A,B,zetaA,zetaB,conA,conB,dconA,dconB,aux,N,L,Y,L);
+
+    int64_t t1 = TimeInMicros();
+    for (int i=0; i<ITERS; i++) {
+        ip->GenclassY(A,B,zetaA,zetaB,dconA,dconB,L,Y);
+    }
+    int64_t t2 = TimeInMicros();
+    long totalY = dconA * dconB;
+    printf("per class Y L=%d: %g ns\n", L, (t2-t1)*1e3/ITERS);
+
+    //for (int i=0; i<100000; i++)
+    //    ip->Genclass(a,b,A,B,zetaA,zetaB,conA,conB,dconA,dconB,aux,N,L,Y,L);
 
     delete ip;
+}
+*/
+/*
+// simpler main for testing accuracy of Ylm
+int main() {
+    int L=10;
+    double x = 0.5;
+    double phi = 1.2;
+    double Y[(L+1)*(L+1)];
+    //for (int i=0; i<iter; i++) {
+        au::edu::anu::qm::ro::Integral_Pack::GenY(Y, x, phi, L);
+    //}
+    for (int l=0; l<=L; l++) {
+        for (int k=-L; k<-l; k++) {
+            printf("       ");
+        }
+        for (int m=-l; m<=l; m++) {
+            printf("%6.2f ", Y[lm2k(l,m)]);
+        }
+        for (int k=l+1; k<L; k++) {
+            printf("       ");
+        }
+        printf("\n");
+    }
+
 }
 */
