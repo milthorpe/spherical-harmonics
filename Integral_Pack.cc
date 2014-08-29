@@ -170,17 +170,27 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
             }
         }
         // Real Ylm
-        Y[lm2k(0,0)]  = Plm[0][0];
-        for (m=1; m<=L; m++) {
-            Y[lm2k(m,0)]  = Plm[m][0];            
-            double cosmphi = cos(m*phi);
-            double sinmphi = sin(m*phi);
-            for (l=m; l<=L; l++) {
-                Y[lm2k(l,m)]  = Plm[l][m]*SQRT2*cosmphi;
-                Y[lm2k(l,-m)] = Plm[l][m]*SQRT2*sinmphi;
+        double cosphi = cos(phi);
+        double sinphi = sin(phi);
+        double alpha = sin(phi/2.0);
+        alpha = 2.0 * alpha * alpha;
+        double beta = sinphi;
+        double cosmphi = 1.0;
+        double sinmphi = 0.0;
+        for (l=0; l<=L; l++) {
+            Y[lm2k(l,0)]  = Plm[l][0];
+            double cosmphi = 1.0;
+            double sinmphi = 0.0;
+            for (m=1; m<=l; m++) {
+                double inccos = alpha * cosmphi + beta * sinmphi;
+                double incsin = alpha * sinmphi - beta * cosmphi;
+                cosmphi -= inccos;
+                sinmphi -= incsin;
+                double fs = M_SQRT2*sinmphi, fc=M_SQRT2*cosmphi;
+                Y[lm2k(l,m)]  = Plm[l][m]*fc;
+                Y[lm2k(l,-m)] = Plm[l][m]*fs;
             }
         }
-
     }
 
     void Integral_Pack::GenclassY(const double *A, const double *B, const double *zetaA, const double *zetaB, int dconA, int dconB, int Ln, double *Ylm){
