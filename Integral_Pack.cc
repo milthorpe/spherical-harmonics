@@ -42,6 +42,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
 
     Integral_Pack::Integral_Pack(int N, int L, double Type, double roThresh, double mrad, double roZ) {
         this->N = N; this->L=L; this->Type=Type;
+        sh = new SphericalHarmonics(L);
         initialize();
         thresh=roThresh; rad=mrad; omega=Type; this->roZ=roZ;
         if (Type<=0.) initializeCoulomb(N);
@@ -51,6 +52,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
     }
 
     Integral_Pack::~Integral_Pack() {
+        delete sh;
         free(lambda); free(q); free(arrV); 
         for (int i=1; i<=MAX_BRA_L; i++) for (int j=1; j<=i; j++) {
             free(HRRMAP[i][j]); free(HRRMAP2[j][i]);
@@ -121,7 +123,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         // LMRG2013 eq 22a-22f
         for (l=0; l<=MAX_KET_L; l++) for (m=-l; m<=l; m++) {
             double cminus=.5*sqrt((l-m-1.0)*(l-m)*(2.0*l+1.0)/(2.0*l-1.0)), cplus=.5*sqrt((l+m-1.0)*(l+m)*(2.0*l+1.0)/(2.0*l-1.0));
-            int index=lm2k(l,m);
+            int index = YVR(l,m);
             if (m<=-2) cxplus[index]=-cminus;
                 else if (m>=1) cxplus[index]=cminus;
                 else if (m==-1) cxplus[index]=0;
@@ -155,44 +157,6 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
         for (; l<=L; l++) B[l]=0.;
     }
 
-    void Integral_Pack::GenY(double *Y, double X, double phi, int L) {
-        int l,m;
-        // Plm calculation according to (6.7.9)-(6.7.10) NR 3rd ed
-        double Plm[L+1][L+1],sintheta = sqrt(1-X*X);
-        Plm[0][0] = 0.5/sqrt(PI);
-        for (l=1; l<=L; l++) Plm[l][l]=-sqrt(1.0+0.5/l)*sintheta*Plm[l-1][l-1];
-        for (m=0; m<L; m++) Plm[m+1][m]=X*sqrt(2.0*m+3.0)*Plm[m][m];
-        for (l=2; l<=L; l++) {
-            double ls=l*l, lm1s = (l-1)*(l-1);
-            for (m=0; m <= l-2; m++) {
-                double ms=m*m;
-                Plm[l][m] = sqrt((4.0*ls-1.0)/(ls-ms))*(X*Plm[l-1][m]-sqrt((lm1s-ms)/(4.0*lm1s-1.0))*Plm[l-2][m]);
-            }
-        }
-        // Real Ylm
-        double cosphi = cos(phi);
-        double sinphi = sin(phi);
-        double alpha = sin(phi/2.0);
-        alpha = 2.0 * alpha * alpha;
-        double beta = sinphi;
-        double cosmphi = 1.0;
-        double sinmphi = 0.0;
-        for (l=0; l<=L; l++) {
-            Y[lm2k(l,0)]  = Plm[l][0];
-            double cosmphi = 1.0;
-            double sinmphi = 0.0;
-            for (m=1; m<=l; m++) {
-                double inccos = alpha * cosmphi + beta * sinmphi;
-                double incsin = alpha * sinmphi - beta * cosmphi;
-                cosmphi -= inccos;
-                sinmphi -= incsin;
-                double fs = M_SQRT2*sinmphi, fc=M_SQRT2*cosmphi;
-                Y[lm2k(l,m)]  = Plm[l][m]*fc;
-                Y[lm2k(l,-m)] = Plm[l][m]*fs;
-            }
-        }
-    }
-
     void Integral_Pack::GenclassY(const double *A, const double *B, const double *zetaA, const double *zetaB, int dconA, int dconB, int Ln, double *Ylm){
         for (int ii=0; ii<dconA; ii++) for (int jj=0; jj<dconB; jj++) {
             double zeta=zetaA[ii]+zetaB[jj];
@@ -200,7 +164,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
             double r=sqrt(sqr(P[0])+sqr(P[1])+sqr(P[2]));
             if (r<1e-15/roZ) continue; // CHECK 
             double *Y=&Ylm[(ii*dconB+jj)*(Ln+1)*(Ln+1)],phi=atan2(P[1],P[0]),X=P[2]/r;
-            GenY(Y,X,phi,Ln); 
+            sh->computeY(Ln, X, phi, Y); 
         }
     } 
 
@@ -237,7 +201,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
                     Y=&Ylm[(ii*dconB+jj)*(maxL+1)*(maxL+1)];
                 else {                
                     double phi=atan2(P[1],P[0]),X=P[2]/r;
-                    GenY(Y,X,phi,Ln);                 
+                    sh->computeY(Ln, X, phi, Y);
                 } // if (Ln<10) printf("IntegralPack ln204 J(%f,%d)\n",r*ldn,Ln+angA+angB); 
                 GenJ(J,r*ldn,Ln+angA+angB); // if (Ln<10) printf("OK\n");
             } 
@@ -388,7 +352,7 @@ RTT_CC_DECLS0(Integral_Pack, "Integral_Pack", RuntimeType::class_kind)
                     Y=&Ylm[(ii*dconB+jj)*(maxL+1)*(maxL+1)];
                 else {                
                     double phi=atan2(P[1],P[0]),X=P[2]/r;
-                    GenY(Y,X,phi,Ln);                 
+                    sh->computeY(Ln, X, phi, Y);                 
                 } 
                 GenJ(J,r*ldn,Ln+angA+angB); 
             } 
@@ -655,26 +619,25 @@ int main() {
 */
 /*
 // simpler main for testing accuracy of Ylm
-int main() {
-    int L=10;
-    double x = 0.5;
-    double phi = 1.2;
+using au::edu::anu::qm::ro::SphericalHarmonics;
+int main(int argc, char *argv[]) {
+    int L=3;
+    double theta=M_PI/20., phi=0.01;
+    double X = cos(theta);
+    if (argc>1) X=(atof(argv[1]));
+    if (argc>2) phi=(atof(argv[2]));
     double Y[(L+1)*(L+1)];
+    SphericalHarmonics* sh = new SphericalHarmonics(L);
     //for (int i=0; i<iter; i++) {
-        au::edu::anu::qm::ro::Integral_Pack::GenY(Y, x, phi, L);
+        sh->computeY(L, X, phi, Y);
     //}
     for (int l=0; l<=L; l++) {
-        for (int k=-L; k<-l; k++) {
-            printf("       ");
-        }
+        for (int m=-L; m<-l; m++) printf("                        ");
         for (int m=-l; m<=l; m++) {
-            printf("%6.2f ", Y[lm2k(l,m)]);
-        }
-        for (int k=l+1; k<L; k++) {
-            printf("       ");
+            printf("%23.16e", Y[YVR(l,m)]);
+            if (m!=l) printf(" ");
         }
         printf("\n");
     }
-
 }
 */

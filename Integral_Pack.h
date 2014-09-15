@@ -5,6 +5,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include "SphericalHarmonics.h"
 
 #ifdef __X10_HEADERS
 #include <x10aux/RTT.h>
@@ -28,7 +29,6 @@ namespace au {
                             static Integral_Pack* _make(int N, int L, double Type, double roThresh, double rad, double roZ);
                             Integral_Pack(int N, int L,double Type,double roThresh, double rad, double roZ);
                             ~Integral_Pack();
-                            static void GenY(double *Y, double X, double phi, int L);
                             void GenclassY(const double *A, const double *B, const double *zetaA, const double *zetaB, int dconA, int dconB, int Ln, double *Ylm);
                             void Genclass(int angA, int angB, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, double* aux);
                             void Genclass(int angA, int angB, const double *A, const double *B, const double *zetaA, const double *zetaB, const double *conA, const double *conB, int dconA, int dconB, int n, int Ln, double *Ylm, int maxL, int off, double* aux);
@@ -40,6 +40,9 @@ namespace au {
                             int Ncal, Nprime;
                             double thresh, rad,omega;
                             double *arrV;
+
+                            SphericalHarmonics* sh;
+
                             // BRA
                             #define MAX_BRA_L 10 //for hh
                             #define MAX_TOTAL_BRA_L (MAX_BRA_L+1)*(MAX_BRA_L+2)*(MAX_BRA_L+3)/6
@@ -53,7 +56,6 @@ namespace au {
                             // KET
                             #define MAX_KET_L 200
                             #define MAX_KET_LM (MAX_KET_L+1)*(MAX_KET_L+1)
-                            #define lm2k(l,m) ((l)*(l)+(l)+(m))
                             #define Koffset(k,a) ((k)*(K)+(a))
                             double cxminus[MAX_KET_LM],cxplus[MAX_KET_LM],cyminus[MAX_KET_LM],cyplus[MAX_KET_LM],cz[MAX_KET_LM];
 
