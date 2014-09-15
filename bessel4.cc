@@ -1,3 +1,5 @@
+#include <cmath>
+#include <cstring>
 #include "bessel4.h"
 
 double ftrunc(double x)
@@ -30,11 +32,10 @@ void J_bessel_HalfInt(double x, int nb, double *b, int *ncalc) {
 
     double sqrtpi = 1.7724538509055159; // sqrt pi
 
-    --b; // Index Shift to Frotran convention
+    memset(b, 0, sizeof(double)*nb);
+    --b; // Index Shift to Fortran convention
 	*ncalc = nb;
 	intx = (int) (x);
-	for (i = 1; i <= nb; ++i)
-	    b[i] = 0.;
 
 	/*===================================================================
 	  Branch into  3 cases :
@@ -79,14 +80,13 @@ void J_bessel_HalfInt(double x, int nb, double *b, int *ncalc) {
 
 	} else if (x > 25. && nb <= intx + 1) {
 	    b++; // C convention
-	    b[0] = sqrt(2./PI)*sin(x)/sqrt(x); if (nb==1) return;
-	    b[1] = sqrt(2./PI)*(sin(x)/x-cos(x))/sqrt(x); if (nb==2) return;
+	    b[0] = sqrt(2./M_PI)*sin(x)/sqrt(x); if (nb==1) return;
+	    b[1] = sqrt(2./M_PI)*(sin(x)/x-cos(x))/sqrt(x); if (nb==2) return;
 	    for (i=2; i<nb; i++)
 	    	b[i] = 2.*(i-.5)/x*b[i-1]-b[i-2];
 	    return;
 
-	}
-	else { //printf("case 3\n");
+	} else { //printf("case 3\n");
     /* rtnsig_BESS <= x && ( x <= 25 || intx+1 < nb ) :
        --------------------------------------------------------
        Use recurrence to generate results.
@@ -228,8 +228,7 @@ L190:
 			if (nb <= 1) {
 				sum += b[1] * .5;
 				goto L250;
-			}
-			else {
+			} else {
 			/*-- nb >= 2 : ---------------------------
 		    Calculate and store b[NB-1].
 			----------------------------------------*/
@@ -299,9 +298,6 @@ L250:
 				b[n] /= sum;
 		}
 	}
-
-
-
 }
 /*
 int main() {
@@ -309,12 +305,12 @@ int main() {
 	int nb=301,ncalc;
 	for (x=0.00001; x<10000.1; x*=10) {
 		J_bessel_HalfInt(x, nb, B, &ncalc);
-		fac=sqrt(0.5*PI/x);
+		fac=sqrt(0.5*M_PI/x);
 		printf("%e %3d - %25.15e %25.15e %25.15e %25.15e\n",x,ncalc,B[0]*fac,B[10]*fac,B[100]*fac,B[300]*fac);
 	}
 	x=2.248254632739607e+01;
 	//J_bessel(&x, &alpha, &nb, B, &ncalc);
-	//printf("%d - %.15e\n",ncalc,B[300]*sqrt(PI*.5/x));
+	//printf("%d - %.15e\n",ncalc,B[300]*sqrt(M_PI*.5/x));
 	B[300]=besselj(300,x);
 	B[299]=besselj(299,x);
 	int l;

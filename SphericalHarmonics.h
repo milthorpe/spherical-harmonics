@@ -32,7 +32,6 @@ class SphericalHarmonics {
     double* A;  // coefficients A for P_l^m
     double* B;  // coefficients B for P_l^m
     double* P;
-    double* Y;
 
     /* 
      * Precompute coefficients a_l^m and b_l^m for all l <= L, m <= l

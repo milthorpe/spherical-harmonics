@@ -18,21 +18,17 @@ using au::edu::anu::qm::ro::SphericalHarmonics;
 
 SphericalHarmonics::SphericalHarmonics(int LL) {
     size_t sizeP = (LL+1)*(LL+2)/2;
-    P=(double (*))calloc(sizeP, sizeof(double));
+    P = new double[sizeP];
 
-    A=(double (*))calloc(sizeP, sizeof(double));
-    B=(double (*))calloc(sizeP, sizeof(double));
+    A = new double[sizeP];
+    B = new double[sizeP];
     this->initAB(LL);
-
-    size_t sizeY=(LL+1)*(LL+1);
-    Y=(double (*))calloc(sizeY, sizeof(double));
 }
 
 SphericalHarmonics::~SphericalHarmonics() {
-    free(P);
-    free(A);
-    free(B);
-    free(Y);
+    delete[] P;
+    delete[] A;
+    delete[] B;
 }
 
 /* 
