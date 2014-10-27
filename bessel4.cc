@@ -1,26 +1,7 @@
 #include <cmath>
+#include <algorithm>
 #include <cstring>
 #include "bessel4.h"
-
-double ftrunc(double x)
-{
-	if(x >= 0) return floor(x);
-	else return ceil(x);
-}
-
-double fmax2(double x, double y)
-{
-#ifdef IEEE_754
-	if (ISNAN(x) || ISNAN(y))
-		return x + y;
-#endif
-	return (x < y) ? y : x;
-}
-
-int imin2(int x, int y)
-{
-    return (x < y) ? x : y;
-}
 
 void J_bessel_HalfInt(double x, int nb, double *b, int *ncalc) {
 
@@ -144,7 +125,7 @@ void J_bessel_HalfInt(double x, int nb, double *b, int *ncalc) {
 					p = plast * tover;
 					--n;
 					en -= 2.;
-					nend = imin2(nb,n);
+					nend = std::min(nb,n);
 					for (l = nstart; l <= nend; ++l) {
 						pold = psavel;
 						psavel = psave;
@@ -163,7 +144,7 @@ void J_bessel_HalfInt(double x, int nb, double *b, int *ncalc) {
 			/* -----------------------------------------------------
 			Calculate special significance test for NBMX > 2.
 			-----------------------------------------------------*/
-			test = fmax2(test, sqrt(plast * ensig_BESS) * sqrt(p + p));
+			test = std::max(test, sqrt(plast * ensig_BESS) * sqrt(p + p));
 		}
 		/* ------------------------------------------------
 		Calculate P*S until significance test passes. */
