@@ -6,7 +6,7 @@ all:	libspherical.so
 %.o : %.cc %.h
 		$(CXX) $(CXXFLAGS) -c -I. $^
 
-libspherical.so:	SphericalHarmonics.o bessel4.o
+libspherical.so:	SphericalHarmonics.o
 		$(CXX) $(CXXFLAGS) -shared -o $@ $(LDFLAGS) $^
 
 lint:	
