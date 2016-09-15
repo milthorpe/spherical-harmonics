@@ -11,6 +11,8 @@
 #ifndef SPHERICAL_HARMONICS_H_
 #define SPHERICAL_HARMONICS_H_
 
+#include <cstddef>
+
 #define PVT(l,m) ((m)+((l)*((l)+1))/2)
 #define YVR(l,m) ((m)+(l)+((l)*(l)))
 
